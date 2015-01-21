@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<UBT01>
+  <HarmonyPath path="../.."/>
+  <ForceOptimization flag="true"/>
+  <Files>
+    <Entry>
+      <Name>system_definitions.h</Name>
+      <Checksum>8B3A074E0AF0D43D407D92992AAF1CE0</Checksum>
+    </Entry>
+    <Entry>
+      <Name>drv_usart_static.h</Name>
+      <Checksum>FDB6BE7D458E4F5ED04956097584EB76</Checksum>
+    </Entry>
+    <Entry>
+      <Name>system_init.c</Name>
+      <Checksum>14FDC62625BC7FBEB6876BE7DE937BC8</Checksum>
+    </Entry>
+    <Entry>
+      <Name>system_tasks.c</Name>
+      <Checksum>BA2BFB261322302544295C1B65E3735D</Checksum>
+    </Entry>
+    <Entry>
+      <Name>system_config.h</Name>
+      <Checksum>66E0247EE198AB34956FB362E75E3D86</Checksum>
+    </Entry>
+    <Entry>
+      <Name>system_interrupt.c</Name>
+      <Checksum>09916477803900E590708050B6BD053A</Checksum>
+    </Entry>
+    <Entry>
+      <Name>drv_usart_static.c</Name>
+      <Checksum>152A63054FE12483233C72A49F09B026</Checksum>
+    </Entry>
+  </Files>
+</UBT01>
