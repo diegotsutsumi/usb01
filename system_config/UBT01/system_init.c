@@ -12,6 +12,7 @@
 #include "system_definitions.h"
 #include "i2c.h"
 #include "memory.h"
+#include "android.h"
 #include "xc.h"
 
 /*** DEVCFG0 ***/
@@ -78,16 +79,14 @@ const SYS_DEVCON_INIT sysDevconInit =
 extern USB_HOST_CLASS_DRIVER androidDriver;
 
 
-
-
- const USB_HOST_TARGET_PERIPHERAL_LIST USBTPList[5] =
- {
+const USB_HOST_TARGET_PERIPHERAL_LIST USBTPList[5] =
+{
     {TPL_MATCH_VID_PID(0x18D1, 0x2D00), TPL_FLAG_VID_PID, &androidDriver},
     {TPL_MATCH_VID_PID(0x18D1, 0x2D01), TPL_FLAG_VID_PID, &androidDriver},
     {TPL_MATCH_VID_PID(0x18D1, 0x0000), TPL_FLAG_IGNORE_PID, &androidDriver}, // Generic Android
     {TPL_MATCH_VID_PID(0x1662, 0x0000), TPL_FLAG_IGNORE_PID, &androidDriver}, // Positivo Tablet
     {TPL_MATCH_VID_PID(0x2207, 0x0000), TPL_FLAG_IGNORE_PID, &androidDriver}  // Chinese tablet not sending android VID PID, but ubuntu VID PID
- };
+};
 
 /****************************************************
  * Endpoint Table needed by the controller driver .
@@ -169,29 +168,22 @@ void SYS_Initialize ( void* data )
     SYS_INT_Initialize();
 
     sysObj.drvTmr0 = DRV_TMR_Initialize(DRV_TMR_INDEX_0, (SYS_MODULE_INIT *)&drvTmr0InitData);
-
     SYS_INT_VectorPrioritySet(INT_VECTOR_T2, INT_PRIORITY_LEVEL4);
     SYS_INT_VectorSubprioritySet(INT_VECTOR_T2, INT_SUBPRIORITY_LEVEL1);
-
     SYS_INT_SourceEnable(INT_SOURCE_TIMER_2);
-
     sysObj.sysTmr  = SYS_TMR_Initialize(SYS_TMR_INDEX_0, (const SYS_MODULE_INIT  * const)&sysTmrInitData);
 
-#ifndef I2CTXTest
     sysObj.usbHostObject0 = USB_HOST_Initialize (USB_HOST_INDEX_0, (SYS_MODULE_INIT *)&usbHostInitData);
-
-    
     SYS_INT_VectorPrioritySet(INT_VECTOR_USB1, INT_PRIORITY_LEVEL4);
     SYS_INT_VectorSubprioritySet(INT_VECTOR_USB1, INT_SUBPRIORITY_LEVEL0);
-#endif
-    
-#ifndef AVLSimulation
+
+    SYS_INT_Enable();
+
     I2C_Init(20000,GetPeripheralClock()); //I2C 20KHz
-#endif
     
     MEM_Init(5000000,GetPeripheralClock()); //SPI 5MHz
 
-    SYS_INT_Enable();
+    AND_Init();
 
     APP_Initialize();
 }

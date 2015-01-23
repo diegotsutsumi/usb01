@@ -57,8 +57,8 @@ void I2C_InitObject()
     i2c_obj.tx_ok = false;
     i2c_obj.tx_num_tries = 0;
 
-    i2c_obj.rx_alloc_idx = 99;
-    i2c_obj.tx_alloc_idx = 99;
+    i2c_obj.rx_alloc_idx = 254;
+    i2c_obj.tx_alloc_idx = 255;
 
     for(i=0;i<BUFFER_RX_NUMBER;i++)
     {
@@ -97,8 +97,8 @@ void I2C_DeinitObject()
     i2c_obj.tx_ok = false;
     i2c_obj.tx_num_tries = 0;
 
-    i2c_obj.rx_alloc_idx = 99;
-    i2c_obj.tx_alloc_idx = 99;
+    i2c_obj.rx_alloc_idx = 254;
+    i2c_obj.tx_alloc_idx = 255;
 
     for(i=0;i<BUFFER_RX_NUMBER;i++)
     {
@@ -158,14 +158,12 @@ char I2C_SlaveRead(void)
      return (PLIB_I2C_ReceivedByteGet(I2C_ID_1));
 }
 
-bool I2C_Set_Event_Handler(I2C_EVENT_HANDLER handler)
+void I2C_Set_Event_Handler(I2C_EVENT_HANDLER handler)
 {
     if(handler!=0)
     {
         i2c_obj.event_handler = handler;
-        return true;
     }
-    return false;
 }
 
 void changeI2CState(I2C_STATES_LVL0 a, I2C_STATES_LVL1 b)
@@ -191,7 +189,7 @@ uint8_t allocI2CRxBuffIndex() //Called By I2C when address matched
             return i;
         }
     }
-    return 255; //Should never end up here
+    return 254; //Should never end up here
 }
 I2C_RETURN I2CFinishedReceiving() // Called when either a stop bit was detected during reception or the received packet reached 256 bytes
 {
@@ -201,7 +199,7 @@ I2C_RETURN I2CFinishedReceiving() // Called when either a stop bit was detected 
         if(i2c_obj.rxStatus[i]==I2C_RX_BUFFER_I2C_USING)
         {
             i2c_obj.rxStatus[i] = I2C_RX_BUFFER_READY;
-            i2c_obj.event_handler(I2C_EVENT_AVL_DATA_READY);
+            i2c_obj.event_handler(I2C_EVENT_DATA_READY);
             return I2C_RETURN_SUCCESS;
         }
     }
@@ -213,7 +211,7 @@ BYTE * getI2CRxBuffer(uint16_t * size, uint8_t * handler) //Called by APP when s
     if(i2c_obj.rxNumPackets==0)
     {
         *size=0;
-        *handler=255;
+        *handler=254;
         return 0;
     }
     
@@ -228,7 +226,7 @@ BYTE * getI2CRxBuffer(uint16_t * size, uint8_t * handler) //Called by APP when s
         }
     }
     *size=0;
-    *handler=255;
+    *handler=254;
     return 0;
 }
 I2C_RETURN freeI2CRxBuffIndex(uint8_t handler) //Called by APP when transmition is finished
@@ -254,7 +252,7 @@ BYTE * allocI2CTXBuffer(uint8_t * out_index, uint16_t *out_maxSize) //Called By 
     if(i2c_obj.txNumPackets>BUFFER_TX_NUMBER)
     {
         *out_maxSize=0;
-        *out_index=254;
+        *out_index=255;
         return 0; //Buffer FULL
     }
 
@@ -271,7 +269,7 @@ BYTE * allocI2CTXBuffer(uint8_t * out_index, uint16_t *out_maxSize) //Called By 
     }
     
     *out_maxSize=0;
-    *out_index=254;
+    *out_index=255;
     return 0; //Buffer FULL
 }
 
@@ -597,7 +595,7 @@ void I2C_Tasks_ISR()
             if(i2c_obj.tx_num_tries>=TX_MAX_TRIES)
             {
                 freeI2CTXBuffer();
-                i2c_obj.event_handler(I2C_EVENT_PACKET_NOT_SENT);
+                i2c_obj.event_handler(I2C_EVENT_DATA_NOT_SENT);
                 changeI2CState(I2C_STATE0_SettingUpSlave,I2C_STATE1_None);
                 i2c_obj.tx_num_tries=0;
             }
@@ -631,7 +629,7 @@ void I2C_Tasks_ISR()
                 if(i2c_obj.tx_ok)
                 {
                     freeI2CTXBuffer();
-                    i2c_obj.event_handler(I2C_EVENT_PACKET_SENT);
+                    i2c_obj.event_handler(I2C_EVENT_DATA_SENT);
                     changeI2CState(I2C_STATE0_SettingUpSlave,I2C_STATE1_None);
                 }
                 else //Slave Nacked
@@ -639,7 +637,7 @@ void I2C_Tasks_ISR()
                     if(i2c_obj.tx_num_tries>=TX_MAX_TRIES)
                     {
                         freeI2CTXBuffer();
-                        i2c_obj.event_handler(I2C_EVENT_PACKET_NOT_SENT);
+                        i2c_obj.event_handler(I2C_EVENT_DATA_NOT_SENT);
                         changeI2CState(I2C_STATE0_SettingUpSlave,I2C_STATE1_None);
                         i2c_obj.tx_num_tries=0;
                     }

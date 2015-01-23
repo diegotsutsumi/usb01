@@ -45,9 +45,31 @@ void TunelLoginPacket(uint8_t * in_serialNumber, uint8_t * in_firmwareVersion, u
 
 }
 
-void TunelFwAnswer(bool in_cmdOk, uint8_t * out_packetPointer, uint16_t * out_size)
+void TunelServerAnswer(bool answer, uint8_t * out_packetPointer, uint16_t * out_size)
 {
-    
+    uint8_t crc;
+    out_packetPointer[0] = 0x74; //Start Packet
+    out_packetPointer[1] = 0x1B; //My Address
+    out_packetPointer[2] = 0x01; //Server Address
+    out_packetPointer[3] = 0x00; //Size
+    out_packetPointer[4] = 0x02; //Size
+
+    if(answer)
+    {
+        out_packetPointer[5] = 0x5B;
+        out_packetPointer[6] = 0x5B;
+    }
+    else
+    {
+        out_packetPointer[5] = 0x5A;
+        out_packetPointer[6] = 0x5A;
+    }
+
+    calcCRC(out_packetPointer,&(crc));
+
+    //CRC
+    out_packetPointer[7] = crc;
+    *out_size = 8;
 }
 
 void calcCRC(uint8_t * in_packet, uint8_t * out_crc)

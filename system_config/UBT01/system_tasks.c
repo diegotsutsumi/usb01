@@ -34,6 +34,9 @@ void SYS_Tasks ( void )
     /*I2C Task*/
     I2C_Tasks();
 
+    /*Android driver Tasks*/
+    AND_Tasks();
+
     /* Application task */
     APP_Tasks();
 }

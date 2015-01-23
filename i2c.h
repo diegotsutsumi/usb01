@@ -25,9 +25,9 @@
 
 typedef enum
 {
-    I2C_EVENT_AVL_DATA_READY,
-    I2C_EVENT_PACKET_SENT,
-    I2C_EVENT_PACKET_NOT_SENT,
+    I2C_EVENT_DATA_READY,
+    I2C_EVENT_DATA_SENT,
+    I2C_EVENT_DATA_NOT_SENT,
     I2C_EVENT_NONE
 } I2C_EVENT;
 
@@ -137,7 +137,7 @@ void I2C_InitMaster();
 void I2C_DeInitMaster();
 void I2C_InitSlave();
 void I2C_DeInitSlave();
-bool I2C_Set_Event_Handler(I2C_EVENT_HANDLER handler);
+void I2C_Set_Event_Handler(I2C_EVENT_HANDLER handler);
 char I2C_SlaveRead();
 void I2C_InitObject();
 void I2C_DeinitObject();

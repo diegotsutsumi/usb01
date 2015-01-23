@@ -112,6 +112,5 @@ void BootSection readExtFlash512Bytes(DWORD_VAL addr)
 
         newFwRow[i] = wbuff;
     }
-
     PORTBbits.RB13 = 1;
 }
