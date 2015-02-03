@@ -104,10 +104,10 @@ _GEN_EXCPT_ADDR                = _ebase_address + 0x180;
  *************************************************************************/
 MEMORY
 {
-  kseg0_program_mem     (rx)  : ORIGIN = 0x9D000000, LENGTH = 0x1D000
-  exception_mem               : ORIGIN = 0x9D01D000, LENGTH = 0x1000
-  kseg0_boot_mem              : ORIGIN = 0x9FC00000, LENGTH = 0x490
-  debug_exec_mem              : ORIGIN = 0x9FC00490, LENGTH = 0x760
+  kseg0_program_mem     (rx)  : ORIGIN = 0x9D000000, LENGTH = 0x1F000
+  exception_mem               : ORIGIN = 0x9D01F000, LENGTH = 0x1000
+  /*debug_exec_mem              : ORIGIN = 0x9FC00490, LENGTH = 0x760*/
+  kseg0_boot_mem              : ORIGIN = 0x9FC00490, LENGTH = 0x760
   kseg1_boot_mem              : ORIGIN = 0xBFC00000, LENGTH = 0x490
   config3                     : ORIGIN = 0xBFC00BF0, LENGTH = 0x4
   config2                     : ORIGIN = 0xBFC00BF4, LENGTH = 0x4
@@ -155,10 +155,10 @@ SECTIONS
     . += (DEFINED (_DEBUGGER) ? 0x8 : 0x0);
   } > kseg1_boot_mem
   /* Space reserved for the debug executive */
-  .dbg_code _DBG_CODE_ADDR (NOLOAD) :
+  /*.dbg_code _DBG_CODE_ADDR (NOLOAD) :
   {
     . += (DEFINED (_DEBUGGER) ? _DBG_CODE_SIZE : 0x0);
-  } > debug_exec_mem
+  } > debug_exec_mem*/
 
   .app_excpt _GEN_EXCPT_ADDR :
   {
@@ -495,7 +495,7 @@ SECTIONS
     KEEP(*(.startup))
   } > kseg0_boot_mem
 
-  /* Bootloader Section */
+  /* Bootloader Section - Turn Debug Off*/
   .bloader ORIGIN(kseg0_boot_mem):
   {
     KEEP(*(.bloader))
