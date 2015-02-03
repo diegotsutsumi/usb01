@@ -72,7 +72,7 @@ bool MEM_FillBuffer(uint8_t * _buffer, uint16_t _buff_size)
     return false;
 }
 
-bool MEM_Set_Event_Handler(MEM_EVENT_HANDLER handler)
+bool MEM_SetEventHandler(MEM_EVENT_HANDLER handler)
 {
     if(handler!=0)
     {

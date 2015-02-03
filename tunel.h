@@ -16,6 +16,7 @@ void TunelLoginPacket(uint8_t * in_serialNumber, uint8_t * in_firmwareVersion,
 void TunelFwAnswer(bool in_cmdOk, uint8_t * out_packetPointer, uint16_t * out_size);
 
 void calcCRC(BYTE * in_packet, BYTE * out_crc);
+
 bool checkCRC(uint8_t * packet);
 
 void fwByteCRC(BYTE value, WORD_VAL * checksum);

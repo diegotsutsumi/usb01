@@ -158,7 +158,7 @@ char I2C_SlaveRead(void)
      return (PLIB_I2C_ReceivedByteGet(I2C_ID_1));
 }
 
-void I2C_Set_Event_Handler(I2C_EVENT_HANDLER handler)
+void I2C_SetEventHandler(I2C_EVENT_HANDLER handler)
 {
     if(handler!=0)
     {
@@ -450,7 +450,7 @@ void I2C_Tasks()
                 break;
                 default:
                 {
-                    changeI2CState(I2C_STATE0_Error,I2C_STATE1_None);
+                    //changeI2CState(I2C_STATE0_Error,I2C_STATE1_None);
                 }
                 break;
             }
@@ -550,7 +550,8 @@ void I2C_Tasks()
                 break;
                 default:
                 {
-                    changeI2CState(I2C_STATE0_Error,I2C_STATE1_None);
+                    //Software may interrupt and fall here, it is not an error.
+                    //changeI2CState(I2C_STATE0_Error,I2C_STATE1_None);
                 }
                 break;
             }

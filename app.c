@@ -27,6 +27,10 @@ void APP_Initialize ( void )
     appData.serverPacket=0;
     appData.serverBuffHandler=255;
 
+    appData.loginPacketSize=0;
+    appData.loginPacket=0;
+    appData.loginBuffHandler=255;
+
     appData.i2cRxSize=0;
     appData.i2cRX=0;
     appData.genericRxHandler=254;
@@ -35,7 +39,7 @@ void APP_Initialize ( void )
 
     appData.readUSBSize=0;
     appData.readUSB=0;
-    appData.i2cBufferHandler=255;
+    appData.i2cTxHandler=255;
 
     appData.AVLDataReady=0;
     appData.andrDataReady=false;
@@ -52,7 +56,14 @@ void APP_Initialize ( void )
     appData.memWriting=false;
     appData.fwCRC=9;
 
+    entry_flag=true;
+
     appData.srvAnswer=APP_SERVER_NOANSWER;
+
+    appData.txI2C=0;
+    appData.rxI2C=0;
+    appData.txUSB=0;
+    appData.rxUSB=0;
 }
 
 void APP_Tasks ( void )
@@ -64,7 +75,12 @@ void APP_Tasks ( void )
             if(entry_flag)
             {
                 I2C_InitObject(); //Initializing I2C
+                I2C_SetEventHandler(APP_I2CEventHandler);
+
                 AND_InitObject(); //Initializing android driver
+                AND_SetEventHandler(APP_AndrEventHandler);
+
+                entry_flag = true;
                 appData.current_state = APP_STATE0_Running;
             }
         }
@@ -72,16 +88,31 @@ void APP_Tasks ( void )
         
         case APP_STATE0_Running:
         {
-            if(appData.performFlashBoot)
+            if(entry_flag)
             {
-                BootLoader(appData.fwSizeCount.Val);
-            }
-            if(appData.i2cBufferHandler==255) //Last try I2C TX buffer was full
-            {
-                if(appData.andrConnected)
+                entry_flag = false;
+                //Sending first login Try
+                appData.loginPacket = allocI2CTXBuffer(&(appData.loginBuffHandler),&(appData.loginPacketSize));
+                if(appData.loginPacket) //Buffer not Full
                 {
-                    appData.readUSB = allocI2CTXBuffer(&(appData.i2cBufferHandler),&(appData.readUSBSize));
-                    if(appData.i2cBufferHandler!=255) //TX buffer full
+                    TunelLoginPacket(serialNumber,fwVersion,appData.loginPacket,&(appData.loginPacketSize));
+                    I2CStartTX(appData.loginBuffHandler, appData.loginPacketSize,AVL_ADDR);
+                    appData.sysTmrHandle = SYS_TMR_DelayMS(5000);
+                }
+            }
+            if(appData.performFlashBoot && appData.srvAnswer==APP_SERVER_NOANSWER)
+            {
+#ifdef NoDebug
+                BootLoader(appData.fwSizeCount.Val);
+#endif
+            }
+
+            if(appData.andrConnected)
+            {
+                if(appData.i2cTxHandler==255) //Last try I2C TX buffer was full
+                {
+                    appData.readUSB = allocI2CTXBuffer(&(appData.i2cTxHandler),&(appData.readUSBSize));
+                    if(appData.i2cTxHandler!=255) //TX buffer full
                     {
                         if(!AND_Read(appData.readUSB,appData.readUSBSize))
                         {
@@ -91,22 +122,30 @@ void APP_Tasks ( void )
                 }
             }
             
-            if(!appData.loggedIntoServer) //TODO: Implement the first login before 5 seconds
+            if(!appData.loggedIntoServer)
             {
                 if(SYS_TMR_DelayStatusGet(appData.sysTmrHandle))
                 {
-                    appData.serverPacket = allocI2CTXBuffer(&(appData.serverBuffHandler),&(appData.serverPacketSize));
-                    //TODO: Test if buffer full (255)
-                    TunelLoginPacket(serialNumber,fwVersion,appData.serverPacket,&(appData.serverPacketSize));
-                    I2CStartTX(appData.serverBuffHandler, appData.serverPacketSize,AVL_ADDR);
-                    appData.sysTmrHandle = SYS_TMR_DelayMS(5000);
+                    appData.loginPacket = allocI2CTXBuffer(&(appData.loginBuffHandler),&(appData.loginPacketSize));
+
+                    if(appData.loginPacket) //Buffer not Full
+                    {
+                        TunelLoginPacket(serialNumber,fwVersion,appData.loginPacket,&(appData.loginPacketSize));
+                        I2CStartTX(appData.loginBuffHandler, appData.loginPacketSize,AVL_ADDR);
+                        appData.sysTmrHandle = SYS_TMR_DelayMS(5000);
+                    }
                 }
             }
             else
             {
                 if(appData.srvAnswer!=APP_SERVER_NOANSWER)
                 {
-                    //TODO: Send Answer to a server
+                    appData.serverPacket = allocI2CTXBuffer(&(appData.serverBuffHandler),&(appData.serverPacketSize));
+                    if(appData.serverPacket) //Buffer not Full
+                    {
+                        TunelServerAnswer(appData.srvAnswer,fwVersion,appData.serverPacket,&(appData.serverPacketSize));
+                        I2CStartTX(appData.serverBuffHandler, appData.serverPacketSize,AVL_ADDR);
+                    }
                     appData.srvAnswer = APP_SERVER_NOANSWER;
                 }
             }
@@ -128,17 +167,17 @@ void APP_Tasks ( void )
             {
                 if(appData.readUSB[2]<=2)
                 {
-                    I2CStartTX(appData.i2cBufferHandler, appData.readUSBSize, AVL_ADDR);//i2cBufferHandler should not be 254 if the code falls here
+                    I2CStartTX(appData.i2cTxHandler, appData.readUSBSize, AVL_ADDR);//i2cBufferHandler should not be 254 if the code falls here
                 }
                 else
                 {
-                    I2CStartTX(appData.i2cBufferHandler, appData.readUSBSize, appData.readUSB[2]);//i2cBufferHandler should not be 254 if the code falls here
+                    I2CStartTX(appData.i2cTxHandler, appData.readUSBSize, appData.readUSB[2]);//i2cBufferHandler should not be 254 if the code falls here
                 }
 
                 if(appData.andrConnected)
                 {
-                    appData.readUSB = allocI2CTXBuffer(&(appData.i2cBufferHandler),&(appData.readUSBSize));
-                    if(appData.i2cBufferHandler!=255) //TX buffer full
+                    appData.readUSB = allocI2CTXBuffer(&(appData.i2cTxHandler),&(appData.readUSBSize));
+                    if(appData.i2cTxHandler!=255) //TX buffer full
                     {
                         if(!AND_Read(appData.readUSB,appData.readUSBSize))
                         {
@@ -206,7 +245,8 @@ void APP_ProcessAVLPacket()
                     else
                     {
                         if((*(appData.i2cRX+7)!=appData.fwSizeCount.byte.HB) ||
-                           (*(appData.i2cRX+8)!=appData.fwSizeCount.byte.LB)) //Total Size check
+                           (*(appData.i2cRX+8)!=appData.fwSizeCount.byte.LB) ||
+                           (appData.fwSizeCount.Val<0x400) ) //Total Size check
                         {
                             appData.srvAnswer = APP_SERVER_ERROR;
                             return;
@@ -220,6 +260,9 @@ void APP_ProcessAVLPacket()
                         
                         appData.fwUpdating = false;
                         appData.srvAnswer = APP_SERVER_OK;
+
+                        appData.performFlashBoot = true;
+                        //TODO: Start booting
                     }
                 }
                 else if(*(appData.i2cRX+6)==0x07 &&
@@ -230,7 +273,7 @@ void APP_ProcessAVLPacket()
                         appData.fwUpdating = true;
                         appData.fwCRC = true;
                         MEM_InitObj();
-                        MEM_Set_Event_Handler(APP_MEMEventHandler);
+                        APP_MEMEventHandler(APP_MEMEventHandler);
                         appData.PPPChecksumOut.Val=0;
                         appData.fwSizeCount.Val=0;
                         appData.CRC.Val=0;
@@ -241,8 +284,8 @@ void APP_ProcessAVLPacket()
                         appData.memWriting = true;
                         appData.fwLastOffset.v[1]=*(appData.i2cRX+8);
                         appData.fwLastOffset.v[0]=*(appData.i2cRX+9);
-                        appData.fwPacketSize.v[1] = *(appData.i2cRX+10);
-                        appData.fwPacketSize.v[0] = *(appData.i2cRX+11);
+                        appData.fwPacketSize.v[1]=*(appData.i2cRX+10);
+                        appData.fwPacketSize.v[0]=*(appData.i2cRX+11);
                         size = appData.i2cRxSize-12;
 
                         if(size != appData.fwPacketSize.Val)
@@ -286,7 +329,7 @@ void APP_ProcessAVLPacket()
         if(appData.andrConnected)
         {
             appData.androidHandler = appData.genericRxHandler;
-            if(!AND_Write(appData.readUSB,appData.readUSBSize))
+            if(!AND_Write(appData.i2cRX,appData.i2cRxSize))
             {
                 freeI2CRxBuffIndex(appData.genericRxHandler); //Dropping packet in error case
                 return;
@@ -306,11 +349,13 @@ void APP_I2CEventHandler(I2C_EVENT event/*, void * eventData*/)
     {
         case I2C_EVENT_DATA_READY:
         {
+            appData.rxI2C++;
             appData.AVLDataReady++;
         }
         break;
         case I2C_EVENT_DATA_SENT:
         {
+            appData.txI2C++;
             //TODO: Implement a way to check which handler was sent
         }
         break;
@@ -326,7 +371,7 @@ void APP_I2CEventHandler(I2C_EVENT event/*, void * eventData*/)
     }
 }
 
-void APP_AndrEventHandler(AND_EVENT event)
+void APP_AndrEventHandler(AND_EVENT event, uint32_t eventData)
 {
     switch(event)
     {
@@ -342,11 +387,14 @@ void APP_AndrEventHandler(AND_EVENT event)
         break;
         case AND_EVENT_DATA_READY:
         {
+            appData.readUSBSize=eventData;
             appData.andrDataReady=true;
+            appData.rxUSB++;
         }
         break;
         case AND_EVENT_DATA_SENT:
         {
+            appData.txUSB++;
             freeI2CRxBuffIndex(appData.androidHandler);
         }
         break;

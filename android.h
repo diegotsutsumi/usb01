@@ -56,7 +56,7 @@ typedef struct
     AND_STATES_LVL1 lvl1;
 }AND_State;
 
-typedef void (*AND_EVENT_HANDLER)(AND_EVENT event);
+typedef void (*AND_EVENT_HANDLER)(AND_EVENT event, uint32_t eventData);
 
 typedef struct
 {
@@ -87,7 +87,7 @@ void AND_DeinitObject();
 bool AND_Read(BYTE* buff, size_t size);
 bool AND_Write(BYTE* buff, size_t size);
 void AND_Tasks();
-void AND_AndroidEventHandler(USB_HOST_ANDROID_EVENT event, uint8_t eventData, uintptr_t context);
+void AND_AndroidEventHandler(USB_HOST_ANDROID_EVENT event, uint32_t eventData, uintptr_t context);
 USB_HOST_EVENT_RESPONSE USB_HostEventHandler (USB_HOST_EVENTS event, void * eventData, uintptr_t context);
 
 #endif

@@ -32,7 +32,7 @@ typedef enum
 } USB_HOST_ANDROID_EVENT;
 
 typedef uintptr_t USB_HOST_ANDROID_TRANSFER_HANDLE;
-typedef void (*USB_HOST_ANDROID_EVENT_HANDLER)(USB_HOST_ANDROID_EVENT event, uint8_t eventData, uintptr_t context);
+typedef void (*USB_HOST_ANDROID_EVENT_HANDLER)(USB_HOST_ANDROID_EVENT event, uint32_t eventData, uintptr_t context);
 
 typedef struct
 {

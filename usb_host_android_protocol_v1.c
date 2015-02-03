@@ -127,7 +127,7 @@ USB_ERROR _USB_HOST_Android_DriverInitialize (USB_HOST_DEVICE_ID hostId,uint8_t 
     androidInstanceInfo->bulkOutIRP.userData = (uintptr_t )androidInstanceInfo;
 
     androidInstanceInfo->tpl_index = USB_HOST_GetVendorIndex();
-    androidInstanceInfo->appEventCallBack(USB_HOST_ANDROID_EVENT_ATTACH, androidInstanceInfo->tpl_index,androidInstanceInfo->context);
+    androidInstanceInfo->appEventCallBack(USB_HOST_ANDROID_EVENT_ATTACH, (uint32_t)(androidInstanceInfo->tpl_index),androidInstanceInfo->context);
     return status;
 }
 
@@ -147,6 +147,8 @@ void  _USB_HOST_Android_DeInitialize ( USB_HOST_DEVICE_ID id  )
     _USB_HOST_PipeClose( device->bulkInPipeHandle );
 
     _USB_HOST_PipeClose( device->bulkOutPipeHandle );
+
+    //_USB_HOST_PipeClose( device->controlPipeHandle );
 
     device->assigned = false ;
 

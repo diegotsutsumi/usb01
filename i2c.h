@@ -137,7 +137,7 @@ void I2C_InitMaster();
 void I2C_DeInitMaster();
 void I2C_InitSlave();
 void I2C_DeInitSlave();
-void I2C_Set_Event_Handler(I2C_EVENT_HANDLER handler);
+void I2C_SetEventHandler(I2C_EVENT_HANDLER handler);
 char I2C_SlaveRead();
 void I2C_InitObject();
 void I2C_DeinitObject();

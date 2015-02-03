@@ -77,7 +77,7 @@ void changeMEMState(MEM_STATES_LVL0 _lvl0, MEM_STATES_LVL1 _lvl1);
 void MEM_InitObj();
 void MEM_DeinitObj();
 bool MEM_FillBuffer(uint8_t * _buffer, uint16_t _buff_size);
-bool MEM_Set_Event_Handler(MEM_EVENT_HANDLER handler);
+bool MEM_SetEventHandler(MEM_EVENT_HANDLER handler);
 void MEM_Tasks();
 
 #endif	/* MEMORY_H */

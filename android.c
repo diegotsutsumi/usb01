@@ -306,7 +306,7 @@ void AND_Tasks()
         {
             if(andr_obj.entry_flag)
             {
-                andr_obj.event_handler(AND_EVENT_ERROR);
+                andr_obj.event_handler(AND_EVENT_ERROR, NULL);
                 andr_obj.entry_flag = false;
             }
         }
@@ -322,7 +322,7 @@ void AND_Tasks()
 }
 
 
-void AND_AndroidEventHandler(USB_HOST_ANDROID_EVENT event, uint8_t eventData, uintptr_t context)
+void AND_AndroidEventHandler(USB_HOST_ANDROID_EVENT event, uint32_t eventData, uintptr_t context)
 {
     switch(event)
     {
@@ -332,6 +332,7 @@ void AND_AndroidEventHandler(USB_HOST_ANDROID_EVENT event, uint8_t eventData, ui
             {
                 andr_obj.sysTmrHandle = SYS_TMR_DelayMS(20); //Waiting for USB to be ready to read and write.
                 AND_ChangeState(AND_STATE0_WaitingUsbReady, AND_STATE1_None);
+                PLIB_PORTS_PinSet( PORTS_ID_0, PORT_CHANNEL_C, BSP_LED1);
             }
             else
             {
@@ -343,16 +344,11 @@ void AND_AndroidEventHandler(USB_HOST_ANDROID_EVENT event, uint8_t eventData, ui
 
         case USB_HOST_ANDROID_EVENT_DETACH:
         {
-            if(andr_obj.current_state.lvl0==AND_STATE0_WaitingAndroidDetach)
-            {
-                USB_HOST_OperationEnable(andr_obj.hostHandle);
-                AND_ChangeState(AND_STATE0_WaitingHostEnable, AND_STATE1_None);
-            }
-            else
-            {
-                USB_HOST_OperationDisable(andr_obj.hostHandle);
-                AND_ChangeState(AND_STATE0_OpeningHostLayer,AND_STATE1_None);
-            }
+            andr_obj.event_handler(AND_EVENT_DISCONNECTED, NULL);
+            PLIB_PORTS_PinClear( PORTS_ID_0, PORT_CHANNEL_C, BSP_LED1);
+
+            //USB_HOST_OperationEnable(andr_obj.hostHandle);
+            AND_ChangeState(AND_STATE0_WaitingDeviceAttach, AND_STATE1_None);
         }
         break;
 
@@ -432,7 +428,7 @@ void AND_AndroidEventHandler(USB_HOST_ANDROID_EVENT event, uint8_t eventData, ui
         {
             if(andr_obj.current_state.lvl0==AND_STATE0_TransferingData)
             {
-                andr_obj.event_handler(AND_EVENT_DATA_SENT);
+                andr_obj.event_handler(AND_EVENT_DATA_SENT, NULL);
             }
         }
 
@@ -445,13 +441,14 @@ void AND_AndroidEventHandler(USB_HOST_ANDROID_EVENT event, uint8_t eventData, ui
                 if(andr_obj.macroConnect[0]==0xFE)
                 {
                     andr_obj.entry_flag=true;
-                    andr_obj.event_handler(AND_EVENT_CONNECTED);
+                    andr_obj.event_handler(AND_EVENT_CONNECTED, NULL);
                     AND_ChangeState(AND_STATE0_TransferingData,AND_STATE1_None);
                 }
             }
             else if(andr_obj.current_state.lvl0 == AND_STATE0_TransferingData)
             {
-                andr_obj.event_handler(AND_EVENT_DATA_READY);
+                andr_obj.readUSBSize = eventData;
+                andr_obj.event_handler(AND_EVENT_DATA_READY,eventData);
             }
         }
         break;

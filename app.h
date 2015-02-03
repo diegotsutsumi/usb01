@@ -16,7 +16,10 @@
 #include "tunel.h"
 #include "memory.h"
 #include "android.h"
+
+#ifdef NoDebug
 #include "bootloader.h"
+#endif
 
 typedef enum
 {
@@ -28,9 +31,9 @@ typedef enum
 
 typedef enum
 {
-    APP_SERVER_NOANSWER,
+    APP_SERVER_ERROR=0,
     APP_SERVER_OK,
-    APP_SERVER_ERROR
+    APP_SERVER_NOANSWER
 } APP_SERVER_ANSWER;
 
 typedef struct
@@ -42,6 +45,10 @@ typedef struct
     BYTE * serverPacket;
     uint8_t serverBuffHandler;
 
+    uint16_t loginPacketSize;
+    BYTE * loginPacket;
+    uint8_t loginBuffHandler;
+
     uint16_t  i2cRxSize;
     BYTE * i2cRX;
     uint8_t genericRxHandler;
@@ -50,7 +57,7 @@ typedef struct
     
     uint16_t  readUSBSize;
     uint8_t * readUSB;
-    uint8_t i2cBufferHandler;
+    uint8_t i2cTxHandler;
     
     volatile uint8_t AVLDataReady;
     volatile bool andrDataReady;
@@ -69,11 +76,17 @@ typedef struct
     uint8_t fwCRC;
 
     APP_SERVER_ANSWER srvAnswer;
+
+    uint32_t txUSB;
+    uint32_t rxUSB;
+    uint32_t txI2C;
+    uint32_t rxI2C;
 } APP_DATA;
 
 void APP_Initialize ( void );
 void APP_Tasks ( void );
 void APP_ProcessAVLPacket( void );
+void APP_AndrEventHandler(AND_EVENT event, uint32_t eventData);
 void APP_I2CEventHandler(I2C_EVENT event);
 void APP_MEMEventHandler(MEM_EVENT event);
 
