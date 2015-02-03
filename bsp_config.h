@@ -26,18 +26,13 @@ typedef enum
      BSP_UART_CTS = PORTS_BIT_POS_8, // Channel C
      BSP_UART_RTS = PORTS_BIT_POS_9, // Channel C
 
-     BSP_BTH_WS = PORTS_BIT_POS_4, // Channel B
-     BSP_BTH_WH = PORTS_BIT_POS_4, // Channel A
-     BSP_BTH_MLDP = PORTS_BIT_POS_5, // Channel C
-
-     BSP_BTH_CON = PORTS_BIT_POS_4, // Channel C
-     BSP_BTH_MLDP_EV = PORTS_BIT_POS_3, // Channel C
-     BSP_BTH_ACTV = PORTS_BIT_POS_9, // Channel A
-
      BSP_USB_VBON = PORTS_BIT_POS_14, // Channel B
      BSP_USB_SELECT = PORTS_BIT_POS_7, // Channel B
+     BSP_SPI2_CS = PORTS_BIT_POS_13, // Channel B
 
-     BSP_SPI2_CS = PORTS_BIT_POS_13
+     BSP_LED1 = PORTS_BIT_POS_4, // Channel C
+     BSP_LED2 = PORTS_BIT_POS_3, // Channel C
+     BSP_LED3 = PORTS_BIT_POS_9 // Channel A
 
 
 } BSP_PIN;
