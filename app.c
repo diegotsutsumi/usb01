@@ -121,11 +121,12 @@ void APP_Tasks ( void )
                     }
                 }
             }
-            
-            if(!appData.loggedIntoServer)
+
+            if(SYS_TMR_DelayStatusGet(appData.sysTmrHandle))
             {
-                if(SYS_TMR_DelayStatusGet(appData.sysTmrHandle))
+                if(!appData.loggedIntoServer)
                 {
+
                     appData.loginPacket = allocI2CTXBuffer(&(appData.loginBuffHandler),&(appData.loginPacketSize));
 
                     if(appData.loginPacket) //Buffer not Full
@@ -143,7 +144,7 @@ void APP_Tasks ( void )
                     appData.serverPacket = allocI2CTXBuffer(&(appData.serverBuffHandler),&(appData.serverPacketSize));
                     if(appData.serverPacket) //Buffer not Full
                     {
-                        TunelServerAnswer(appData.srvAnswer,fwVersion,appData.serverPacket,&(appData.serverPacketSize));
+                        TunelServerAnswer((appData.srvAnswer==APP_SERVER_ERROR)?false:true,appData.serverPacket,&(appData.serverPacketSize));
                         I2CStartTX(appData.serverBuffHandler, appData.serverPacketSize,AVL_ADDR);
                     }
                     appData.srvAnswer = APP_SERVER_NOANSWER;
@@ -273,7 +274,7 @@ void APP_ProcessAVLPacket()
                         appData.fwUpdating = true;
                         appData.fwCRC = true;
                         MEM_InitObj();
-                        APP_MEMEventHandler(APP_MEMEventHandler);
+                        MEM_SetEventHandler(APP_MEMEventHandler);
                         appData.PPPChecksumOut.Val=0;
                         appData.fwSizeCount.Val=0;
                         appData.CRC.Val=0;

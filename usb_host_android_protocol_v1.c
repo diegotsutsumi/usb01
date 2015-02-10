@@ -26,6 +26,14 @@ void AndroidAppStart_Pv1(void)
     memset(&device_pv1,0x00,sizeof(device_pv1));
 }
 
+void _USB_HOST_Android_EnumerationCompleted()
+{
+    ANDROID_PROTOCOL_V1_DEVICE_DATA * androidInstanceInfo;
+    androidInstanceInfo = &(device_pv1);
+    androidInstanceInfo->tpl_index = USB_HOST_GetVendorIndex();
+    androidInstanceInfo->appEventCallBack(USB_HOST_ANDROID_EVENT_ATTACH, (uint32_t)(androidInstanceInfo->tpl_index),androidInstanceInfo->context);
+}
+
 USB_ERROR _USB_HOST_Android_DriverInitialize (USB_HOST_DEVICE_ID hostId,uint8_t *androidInstance, USB_SPEED speed)
 {
     USB_HOST_QUERY  androidQuery;
@@ -126,14 +134,15 @@ USB_ERROR _USB_HOST_Android_DriverInitialize (USB_HOST_DEVICE_ID hostId,uint8_t 
     /*Instance info for callback function */
     androidInstanceInfo->bulkOutIRP.userData = (uintptr_t )androidInstanceInfo;
 
-    androidInstanceInfo->tpl_index = USB_HOST_GetVendorIndex();
-    androidInstanceInfo->appEventCallBack(USB_HOST_ANDROID_EVENT_ATTACH, (uint32_t)(androidInstanceInfo->tpl_index),androidInstanceInfo->context);
+    USB_HOST_SetEnumCompleted(_USB_HOST_Android_EnumerationCompleted);
+
     return status;
 }
 
 void  _USB_HOST_Android_DeInitialize ( USB_HOST_DEVICE_ID id  )
 {
     ANDROID_PROTOCOL_V1_DEVICE_DATA *device;
+    USB_HOST_ANDROID_EVENT_HANDLER appCallBack;
     
     device = &device_pv1;
 
@@ -151,8 +160,9 @@ void  _USB_HOST_Android_DeInitialize ( USB_HOST_DEVICE_ID id  )
     //_USB_HOST_PipeClose( device->controlPipeHandle );
 
     device->assigned = false ;
-
+    appCallBack = device->appEventCallBack;
     memset(&device_pv1,0x00,sizeof(device_pv1));
+    device->appEventCallBack = appCallBack;
 }
 
 USB_ANDROID_RETURN AndroidAppWrite_Pv1(BYTE* data, size_t size)

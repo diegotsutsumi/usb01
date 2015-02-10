@@ -45,7 +45,7 @@ void TunelLoginPacket(uint8_t * in_serialNumber, uint8_t * in_firmwareVersion, u
 
 }
 
-void TunelServerAnswer(bool answer, uint8_t * out_packetPointer, uint16_t * out_size)
+void TunelServerAnswer(bool answer, BYTE * out_packetPointer, uint16_t * out_size)
 {
     uint8_t crc;
     out_packetPointer[0] = 0x74; //Start Packet

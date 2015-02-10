@@ -145,7 +145,8 @@ USB_HOST_ANDROID_EVENT_DATA_WRITE_COMPLETE;
 
 
 void AndroidAppStart_Pv1(void);
-USB_ERROR _USB_HOST_Android_DriverInitialize (USB_HOST_DEVICE_ID hostId,uint8_t *androidInstance, USB_SPEED speed);
+void _USB_HOST_Android_EnumerationCompleted();
+USB_ERROR _USB_HOST_Android_DriverInitialize (USB_HOST_DEVICE_ID hostId, uint8_t *androidInstance, USB_SPEED speed);
 //USB_ERROR _USB_HOST_Android_InterfaceInitialize(USB_HOST_DEVICE_ID id, uint8_t interfaceId, uint8_t *androidInstance, USB_SPEED speed);
 void  _USB_HOST_Android_DeInitialize ( USB_HOST_DEVICE_ID id  );
 void USB_HOST_Android_DeInit();

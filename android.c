@@ -330,7 +330,7 @@ void AND_AndroidEventHandler(USB_HOST_ANDROID_EVENT event, uint32_t eventData, u
         {
             if(eventData==0 || eventData==1)
             {
-                andr_obj.sysTmrHandle = SYS_TMR_DelayMS(20); //Waiting for USB to be ready to read and write.
+                andr_obj.sysTmrHandle = SYS_TMR_DelayMS(100); //Waiting for USB to be ready to read and write.
                 AND_ChangeState(AND_STATE0_WaitingUsbReady, AND_STATE1_None);
                 PLIB_PORTS_PinSet( PORTS_ID_0, PORT_CHANNEL_C, BSP_LED1);
             }

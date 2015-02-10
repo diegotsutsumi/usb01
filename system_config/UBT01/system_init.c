@@ -32,11 +32,11 @@
 #pragma config FVBUSONIO = ON           // USB VBUS ON Selection (Controlled by USB Module)
 
 // DEVCFG2
-#pragma config FPLLIDIV = DIV_5         // PLL Input Divider (4x Divider)
+#pragma config FPLLIDIV = DIV_4         // PLL Input Divider (4x Divider)
 #pragma config FPLLMUL = MUL_20         // PLL Multiplier (20x Multiplier)
-#pragma config UPLLIDIV = DIV_5         // USB PLL Input Divider (5x Divider)
+#pragma config UPLLIDIV = DIV_4         // USB PLL Input Divider (5x Divider)
 #pragma config UPLLEN = ON              // USB PLL Enable (Disabled and Bypassed)
-#pragma config FPLLODIV = DIV_2         // System PLL Output Clock Divider (PLL Divide by 1)
+#pragma config FPLLODIV = DIV_2         // System PLL Output Clock Divider (PLL Divide by 2)
 
 // DEVCFG1
 #pragma config FNOSC = PRIPLL           // Oscillator Selection Bits (Fast RC Osc with PLL)
@@ -52,8 +52,8 @@
 //#pragma config FWDTWINSZ = WISZ_25      // Watchdog Timer Window Size (Window Size is 25%)
 
 // DEVCFG0
-#pragma config JTAGEN = ON              // JTAG Enable (JTAG Port Enabled)
-//#pragma config DEBUG = OFF
+#pragma config JTAGEN = OFF              // JTAG Enable (JTAG Port Enabled)
+#pragma config DEBUG = OFF
 #pragma config ICESEL = ICS_PGx1        // ICE/ICD Comm Channel Select (Communicate on PGEC1/PGED1)
 #pragma config PWP = OFF                // Program Flash Write Protect (Disable)
 #pragma config BWP = OFF                // Boot Flash Write Protect bit (Protection Disabled)
