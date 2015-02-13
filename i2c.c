@@ -293,6 +293,17 @@ I2C_RETURN I2CStartTX(uint8_t index, uint16_t size, uint8_t txaddress) //Called 
     return I2C_RETURN_SUCCESS;
 }
 
+I2C_RETURN I2CAppFreeTX(uint8_t index) //Called by APP when it wants to free a buffer_index previously allocated.
+{
+    if(i2c_obj.txStatus[index]==I2C_TX_BUFFER_APP_USING)
+    {
+        i2c_obj.I2CTxBuffSize[index]=0;
+        i2c_obj.txStatus[index] = I2C_TX_BUFFER_FREE;
+        i2c_obj.txNumPackets--;
+        return I2C_RETURN_SUCCESS;
+    }
+    return I2C_RETURN_FAIL;
+}
 uint8_t getI2CTxBufferIndex() //Called by I2C when starting transmition
 {
     int i;
@@ -361,17 +372,20 @@ void I2C_Tasks()
                         changeI2CState(I2C_STATE0_ListeningLine,I2C_STATE1_WaitingAddress);
                         i2c_obj.addrIndex=0;
                     }
-                    if(i2c_obj.to_transmit>0)
+                    else
                     {
-                        i2c_obj.tx_alloc_idx = getI2CTxBufferIndex();
-                        if(i2c_obj.tx_alloc_idx!=255) //Should always be true
+                        if(i2c_obj.to_transmit>0)
                         {
-                            changeI2CState(I2C_STATE0_SettingUpMaster,I2C_STATE1_None);
-                            i2c_obj.tx_num_tries = 0;
-                        }
-                        else
-                        {
-                            changeI2CState(I2C_STATE0_Error,I2C_STATE1_None);
+                            i2c_obj.tx_alloc_idx = getI2CTxBufferIndex();
+                            if(i2c_obj.tx_alloc_idx!=255) //Should always be true
+                            {
+                                changeI2CState(I2C_STATE0_SettingUpMaster,I2C_STATE1_None);
+                                i2c_obj.tx_num_tries = 0;
+                            }
+                            else
+                            {
+                                changeI2CState(I2C_STATE0_Error,I2C_STATE1_None);
+                            }
                         }
                     }
                 }
@@ -383,19 +397,22 @@ void I2C_Tasks()
                     {
                         changeI2CState(I2C_STATE0_ListeningLine,I2C_STATE1_WaitingStart);
                     }
-                    if(i2c_obj.slave_address_interrupt)
+                    else
                     {
-                        if(PLIB_I2C_ReceivedByteIsAvailable(I2C_ID_1))
+                        if(i2c_obj.slave_address_interrupt)
                         {
-                            dummy = I2C_SlaveRead();
-                            PLIB_I2C_SlaveClockRelease(I2C_ID_1);
-                            i2c_obj.slave_address_interrupt = false;
-                            i2c_obj.addrIndex++;
-                            if(i2c_obj.addrIndex>=2 || dummy==0)
+                            if(PLIB_I2C_ReceivedByteIsAvailable(I2C_ID_1))
                             {
-                                i2c_obj.addrIndex=0;
-                                i2c_obj.rx_alloc_idx = allocI2CRxBuffIndex();
-                                changeI2CState(I2C_STATE0_ListeningLine,I2C_STATE1_ReceivingByte);
+                                dummy = I2C_SlaveRead();
+                                PLIB_I2C_SlaveClockRelease(I2C_ID_1);
+                                i2c_obj.slave_address_interrupt = false;
+                                i2c_obj.addrIndex++;
+                                if(i2c_obj.addrIndex>=2 || dummy==0)
+                                {
+                                    i2c_obj.addrIndex=0;
+                                    i2c_obj.rx_alloc_idx = allocI2CRxBuffIndex();
+                                    changeI2CState(I2C_STATE0_ListeningLine,I2C_STATE1_ReceivingByte);
+                                }
                             }
                         }
                     }
@@ -409,39 +426,42 @@ void I2C_Tasks()
                         if(i2c_obj.rx_alloc_idx<BUFFER_RX_NUMBER && i2c_obj.rx_alloc_idx>=0)
                         {
                             I2CFinishedReceiving();
-                            i2c_obj.rx_alloc_idx=99;
+                            i2c_obj.rx_alloc_idx=254;
                         }
                         changeI2CState(I2C_STATE0_ListeningLine,I2C_STATE1_WaitingStart);
                     }
-                    if(i2c_obj.slave_data_interrupt)
+                    else
                     {
-                        if(PLIB_I2C_ReceivedByteIsAvailable(I2C_ID_1))
+                        if(i2c_obj.slave_data_interrupt)
                         {
-                            i2c_obj.slave_data_interrupt = false;
-                            if(i2c_obj.rx_alloc_idx==254) //Buffer FULL
+                            if(PLIB_I2C_ReceivedByteIsAvailable(I2C_ID_1))
                             {
-                                i2c_obj.nackCounter++;
-                                if(i2c_obj.nackCounter<2)
+                                i2c_obj.slave_data_interrupt = false;
+                                if(i2c_obj.rx_alloc_idx==254) //Buffer FULL
                                 {
-                                    dummy = I2C_SlaveRead(); //ACK the first BYTE and NACK the rest of them until master stops
-                                }
-                            }
-                            else
-                            {
-                                if(i2c_obj.I2CRxBuffSize[i2c_obj.rx_alloc_idx]<(BUFFER_SIZE-1))
-                                {
-                                    i2c_obj.I2CRxBuff[i2c_obj.rx_alloc_idx][i2c_obj.I2CRxBuffSize[i2c_obj.rx_alloc_idx]] = I2C_SlaveRead();
-                                    i2c_obj.I2CRxBuffSize[i2c_obj.rx_alloc_idx]++;
-                                    PLIB_I2C_SlaveClockRelease(I2C_ID_1);
+                                    i2c_obj.nackCounter++;
+                                    if(i2c_obj.nackCounter<2)
+                                    {
+                                        dummy = I2C_SlaveRead(); //ACK the first BYTE and NACK the rest of them until master stops
+                                    }
                                 }
                                 else
                                 {
-                                    if(i2c_obj.rx_alloc_idx<BUFFER_RX_NUMBER && i2c_obj.rx_alloc_idx>=0)
+                                    if(i2c_obj.I2CRxBuffSize[i2c_obj.rx_alloc_idx]<(BUFFER_SIZE-1))
                                     {
-                                        I2CFinishedReceiving();
-                                        i2c_obj.rx_alloc_idx=99;
+                                        i2c_obj.I2CRxBuff[i2c_obj.rx_alloc_idx][i2c_obj.I2CRxBuffSize[i2c_obj.rx_alloc_idx]] = I2C_SlaveRead();
+                                        i2c_obj.I2CRxBuffSize[i2c_obj.rx_alloc_idx]++;
+                                        PLIB_I2C_SlaveClockRelease(I2C_ID_1);
                                     }
-                                    changeI2CState(I2C_STATE0_ListeningLine,I2C_STATE1_WaitingStart);
+                                    else
+                                    {
+                                        if(i2c_obj.rx_alloc_idx<BUFFER_RX_NUMBER && i2c_obj.rx_alloc_idx>=0)
+                                        {
+                                            I2CFinishedReceiving();
+                                            i2c_obj.rx_alloc_idx=99;
+                                        }
+                                        changeI2CState(I2C_STATE0_ListeningLine,I2C_STATE1_WaitingStart);
+                                    }
                                 }
                             }
                         }
@@ -615,7 +635,7 @@ void I2C_Tasks_ISR()
                 I2C1STATCLR = 0x00000080;  //clear IWCOL bit
                 i2c_obj.waiting_start_ok = false;
             }
-            if(i2c_obj.waiting_byte_ok)
+            else if(i2c_obj.waiting_byte_ok)
             {
                 if(!PLIB_I2C_TransmitterByteWasAcknowledged(I2C_ID_1))
                 {
@@ -625,7 +645,7 @@ void I2C_Tasks_ISR()
                 }
                 i2c_obj.waiting_byte_ok = false;
             }
-            if(i2c_obj.waiting_stop_ok && I2C1CONbits.PEN==0)
+            else if(i2c_obj.waiting_stop_ok && I2C1CONbits.PEN==0)
             {
                 if(i2c_obj.tx_ok)
                 {

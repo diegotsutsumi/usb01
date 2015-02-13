@@ -8,6 +8,8 @@
 #include "memory.h"
 
 MEM_Object mem_obj;
+int aux;
+char dummy;
 
 void MEM_Init(uint32_t baudRate, uint32_t clockFreq)
 {
@@ -107,12 +109,13 @@ void MEM_Tasks()
                         mem_obj.entry_flag=false;
                         //mem_obj.waiting_write=true;
                         PLIB_PORTS_PinClear( PORTS_ID_0, PORT_CHANNEL_B, BSP_SPI2_CS);
-                        PLIB_SPI_BufferWrite(SPI_ID_2,0/*TODO Write Enable Command*/);
+                        PLIB_SPI_BufferWrite(SPI_ID_2,0x06/*TODO Check Endianness*/);
                     }
                     else
                     {
-                        if(!PLIB_SPI_ReceiverBufferIsFull(SPI_ID_2))
+                        if(PLIB_SPI_ReceiverBufferIsFull(SPI_ID_2))
                         {
+                            dummy = PLIB_SPI_BufferRead(SPI_ID_2);
                             mem_obj.entry_flag=true;
                             PLIB_PORTS_PinSet( PORTS_ID_0, PORT_CHANNEL_B, BSP_SPI2_CS);
                             changeMEMState(MEM_STATE0_Erasing,MEM_STATE1_ErasingBlock);
@@ -127,15 +130,25 @@ void MEM_Tasks()
                     {
                         mem_obj.entry_flag=false;
                         PLIB_PORTS_PinSet( PORTS_ID_0, PORT_CHANNEL_B, BSP_SPI2_CS);
-                        PLIB_SPI_BufferWrite(SPI_ID_2,0/*TODO Page Erase Command*/);
+                        PLIB_SPI_BufferWrite(SPI_ID_2,0xD8 /*TODO Check Endianness*/);
+                        mem_obj.aux=0;
                     }
                     else
                     {
-                        if(!PLIB_SPI_ReceiverBufferIsFull(SPI_ID_2))
+                        if(PLIB_SPI_ReceiverBufferIsFull(SPI_ID_2))
                         {
-                            PLIB_PORTS_PinSet( PORTS_ID_0, PORT_CHANNEL_B, BSP_SPI2_CS);
-                            mem_obj.entry_flag=true;
-                            changeMEMState(MEM_STATE0_Erasing,MEM_STATE1_WaitingErase);
+                            dummy = PLIB_SPI_BufferRead(SPI_ID_2);
+                            if(mem_obj.aux<3)
+                            {
+                                PLIB_SPI_BufferWrite(SPI_ID_2,0 /*Erase Address*/);
+                                mem_obj.aux++;
+                            }
+                            else
+                            {
+                                PLIB_PORTS_PinSet( PORTS_ID_0, PORT_CHANNEL_B, BSP_SPI2_CS);
+                                mem_obj.entry_flag=true;
+                                changeMEMState(MEM_STATE0_Erasing,MEM_STATE1_WaitingErase);
+                            }
                         }
                     }
                 }
@@ -147,12 +160,13 @@ void MEM_Tasks()
                     {
                         PLIB_PORTS_PinClear(PORTS_ID_0, PORT_CHANNEL_B, BSP_SPI2_CS);
                         mem_obj.entry_flag=false;
-                        PLIB_SPI_BufferWrite(SPI_ID_2,0/*Register Address*/);
+                        PLIB_SPI_BufferWrite(SPI_ID_2,0x50/*Register Address*/);
                     }
                     else
                     {
-                        if(!PLIB_SPI_ReceiverBufferIsFull(SPI_ID_2))
+                        if(PLIB_SPI_ReceiverBufferIsFull(SPI_ID_2))
                         {
+                            aux++;
                             miso = PLIB_SPI_BufferRead(SPI_ID_2);
 
                             if(!(miso & MEM_WIP_MASK)) //Erase performed
@@ -165,6 +179,7 @@ void MEM_Tasks()
                             else
                             {
                                 PLIB_SPI_BufferWrite(SPI_ID_2,0/*Dummy*/);
+                                Nop();
                             }
                         }
                     }
@@ -190,12 +205,13 @@ void MEM_Tasks()
                         mem_obj.entry_flag=false;
                         //mem_obj.waiting_write=true;
                         PLIB_PORTS_PinClear(PORTS_ID_0, PORT_CHANNEL_B, BSP_SPI2_CS);
-                        PLIB_SPI_BufferWrite(SPI_ID_2,0/*TODO Write Enable Command*/);
+                        PLIB_SPI_BufferWrite(SPI_ID_2,0x06/*TODO Check Endianess*/);
                     }
                     else
                     {
-                        if(!PLIB_SPI_ReceiverBufferIsFull(SPI_ID_2))
+                        if(PLIB_SPI_ReceiverBufferIsFull(SPI_ID_2))
                         {
+                            dummy = PLIB_SPI_BufferRead(SPI_ID_2);
                             mem_obj.entry_flag=true;
                             mem_obj.addrCount=3;
                             changeMEMState(MEM_STATE0_Writing,MEM_STATE1_Addressing);
@@ -206,8 +222,9 @@ void MEM_Tasks()
 
                 case MEM_STATE1_Addressing:
                 {
-                    if(!PLIB_SPI_ReceiverBufferIsFull(SPI_ID_2))
+                    if(PLIB_SPI_ReceiverBufferIsFull(SPI_ID_2))
                     {
+                        dummy = PLIB_SPI_BufferRead(SPI_ID_2);
                         if(mem_obj.addrCount==0)
                         {
                             mem_obj.entry_flag=true;
@@ -224,8 +241,9 @@ void MEM_Tasks()
                 break;
                 case MEM_STATE1_ProgrammingBytes:
                 {
-                    if(!PLIB_SPI_ReceiverBufferIsFull(SPI_ID_2))
+                    if(PLIB_SPI_ReceiverBufferIsFull(SPI_ID_2))
                     {
+                        dummy = PLIB_SPI_BufferRead(SPI_ID_2);
                         if(mem_obj.byteCount>=mem_obj.buff_size)
                         {
                             mem_obj.entry_flag=true;
@@ -255,15 +273,16 @@ void MEM_Tasks()
                     {
                         PLIB_PORTS_PinClear( PORTS_ID_0, PORT_CHANNEL_B, BSP_SPI2_CS);
                         mem_obj.entry_flag=false;
-                        PLIB_SPI_BufferWrite(SPI_ID_2,0/*Register Address*/);
+                        PLIB_SPI_BufferWrite(SPI_ID_2,0x05/*TODO Check Endianess*/); //Status Register
                     }
                     else
                     {
-                        if(!PLIB_SPI_ReceiverBufferIsFull(SPI_ID_2))
+                        if(PLIB_SPI_ReceiverBufferIsFull(SPI_ID_2))
                         {
                             miso = PLIB_SPI_BufferRead(SPI_ID_2);
+                            PLIB_SPI_ReceiverOverflowClear(SPI_ID_2);
 
-                            if(!(miso & MEM_WIP_MASK)) //Erase performed
+                            if(!(miso & MEM_WIP_MASK)) //Write performed
                             {
                                 PLIB_PORTS_PinSet(PORTS_ID_0, PORT_CHANNEL_B, BSP_SPI2_CS);
                                 mem_obj.entry_flag=true;

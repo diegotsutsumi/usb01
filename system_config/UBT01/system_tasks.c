@@ -24,9 +24,7 @@ void SYS_Tasks ( void )
     DRV_TMR_Tasks(sysObj.drvTmr0);
 
     /* Host layer task routine.*/
-#ifndef I2CTXTest
     USB_HOST_Tasks( sysObj.usbHostObject0);
-#endif
 
     /*External Flash Memory Tasks*/
     MEM_Tasks();

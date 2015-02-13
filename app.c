@@ -12,6 +12,15 @@
 
 APP_DATA appData;
 
+#ifdef MemTest
+uint8_t memTestBuff[50] = {0,1,2,3,4,5,6,7,8,9,
+                           10,11,12,13,14,15,16,17,18,19,
+                           20,21,22,23,24,25,26,27,28,29,
+                           30,31,32,33,34,35,36,37,38,39,
+                           40,41,42,43,44,45,46,47,48,49};
+#endif
+
+
 static BYTE serialNumber[6]="000000";
 static BYTE fwVersion[6]="1.0";
 
@@ -20,7 +29,11 @@ bool entry_flag;
 
 void APP_Initialize ( void )
 {
-    appData.current_state =  APP_STATE0_Initializing;
+#ifdef MemTest
+    appData.current_state = APP_STATE0_MemoryTesting;
+#else
+    appData.current_state = APP_STATE0_Initializing;
+#endif
     appData.sysTmrHandle = 0;
 
     appData.serverPacketSize=0;
@@ -46,6 +59,7 @@ void APP_Initialize ( void )
     appData.loggedIntoServer=false;
     appData.andrConnected=false;
 
+
     appData.performFlashBoot=false;
 
     appData.fwSizeCount.Val=0;
@@ -64,6 +78,10 @@ void APP_Initialize ( void )
     appData.rxI2C=0;
     appData.txUSB=0;
     appData.rxUSB=0;
+
+#ifdef MemTest
+    appData.checkMem=0;
+#endif
 }
 
 void APP_Tasks ( void )
@@ -85,6 +103,72 @@ void APP_Tasks ( void )
             }
         }
         break;
+
+#ifdef MemTest
+        case APP_STATE0_MemoryTesting:
+        {
+            int i,j;
+            if(entry_flag)
+            {
+                entry_flag=false;
+                MEM_InitObj();
+                MEM_SetEventHandler(APP_MEMEventHandler);
+                MEM_FillBuffer(memTestBuff,50);
+                appData.checkMem = 0;
+            }
+            if(appData.checkMem==1)
+            {
+                PORTBbits.RB13 = 0;
+                SPI2BUF = 0xC0;
+                while(SPI1STATbits.SPITBF);
+                SPI2BUF = 0;
+                while(SPI1STATbits.SPITBF);
+                SPI2BUF = 0;
+                while(SPI1STATbits.SPITBF);
+                SPI2BUF = 0;
+                while(SPI1STATbits.SPITBF);
+
+                for(j=0;j<50;j++)
+                {
+                    SPI2BUF = 0x00;
+                    while(!SPI2STATbits.SPIRBF);
+                    appData.checkBuffer[j] = SPI2BUF;
+                }
+                appData.checkMem=2;
+            }
+            else if(appData.checkMem==2)
+            {
+                i=0;
+                for(j=0;j<50;j++)
+                {
+                    if(appData.checkBuffer[j] != memTestBuff[j])
+                    {
+                        i=1;
+                        break;
+                    }
+                }
+                if(i)
+                {
+                    appData.current_state = APP_STATE0_MemoryError;
+                }
+                else
+                {
+                    appData.current_state = APP_STATE0_MemoryOk;
+                }
+            }
+        }
+        break;
+        case APP_STATE0_MemoryOk:
+        {
+            Nop();
+        }
+        break;
+        case APP_STATE0_MemoryError:
+        {
+            Nop();
+        }
+        break;
+#endif
         
         case APP_STATE0_Running:
         {
@@ -116,8 +200,13 @@ void APP_Tasks ( void )
                     {
                         if(!AND_Read(appData.readUSB,appData.readUSBSize))
                         {
-                            //TODO: This error is not being treated yet. Implement it
+                            I2CAppFreeTX(appData.i2cTxHandler);
+                            appData.i2cTxHandler=255;
                         }
+                    }
+                    else
+                    {
+                        Nop();
                     }
                 }
             }
@@ -126,7 +215,6 @@ void APP_Tasks ( void )
             {
                 if(!appData.loggedIntoServer)
                 {
-
                     appData.loginPacket = allocI2CTXBuffer(&(appData.loginBuffHandler),&(appData.loginPacketSize));
 
                     if(appData.loginPacket) //Buffer not Full
@@ -175,17 +263,7 @@ void APP_Tasks ( void )
                     I2CStartTX(appData.i2cTxHandler, appData.readUSBSize, appData.readUSB[2]);//i2cBufferHandler should not be 254 if the code falls here
                 }
 
-                if(appData.andrConnected)
-                {
-                    appData.readUSB = allocI2CTXBuffer(&(appData.i2cTxHandler),&(appData.readUSBSize));
-                    if(appData.i2cTxHandler!=255) //TX buffer full
-                    {
-                        if(!AND_Read(appData.readUSB,appData.readUSBSize))
-                        {
-                            //TODO: This error is not being treated yet. Implement it
-                        }
-                    }
-                }
+                appData.i2cTxHandler=255;
                 appData.andrDataReady = false;
             }
         }
@@ -208,7 +286,7 @@ void APP_Tasks ( void )
         
         default:
         {
-            appData.current_state = APP_STATE0_Error;
+            //appData.current_state = APP_STATE0_Error;
         }
         break;
     }
@@ -226,9 +304,9 @@ void APP_ProcessAVLPacket()
                 if(*(appData.i2cRX+6)==0x60 && *(appData.i2cRX+7)==0x01)
                 {
                     appData.loggedIntoServer=true;
-                    freeI2CRxBuffIndex(appData.genericRxHandler);
-                    return;
                 }
+                freeI2CRxBuffIndex(appData.genericRxHandler);
+                return;
             }
         }
         else
@@ -338,7 +416,7 @@ void APP_ProcessAVLPacket()
         }
         else
         {
-            freeI2CRxBuffIndex(appData.genericRxHandler);
+            freeI2CRxBuffIndex(appData.genericRxHandler); //Dropping packet if Android is not connected
             return;
         }
     }
@@ -362,6 +440,7 @@ void APP_I2CEventHandler(I2C_EVENT event/*, void * eventData*/)
         break;
         case I2C_EVENT_DATA_NOT_SENT:
         {
+            appData.txErrorI2C++;
             //TODO: Implement a way to check which handler wasn't sent
         }
         break;
@@ -383,6 +462,12 @@ void APP_AndrEventHandler(AND_EVENT event, uint32_t eventData)
         break;
         case AND_EVENT_DISCONNECTED:
         {
+            if(appData.i2cTxHandler!=255)
+            {
+                I2CAppFreeTX(appData.i2cTxHandler);
+                appData.i2cTxHandler=255;
+            }
+
             appData.andrConnected = false;
         }
         break;
@@ -401,6 +486,7 @@ void APP_AndrEventHandler(AND_EVENT event, uint32_t eventData)
         break;
         case AND_EVENT_DATA_NOT_SENT:
         {
+            appData.txErrorUSB++;
             freeI2CRxBuffIndex(appData.androidHandler);
         }
         break;
@@ -417,16 +503,24 @@ void APP_MEMEventHandler(MEM_EVENT event)
     {
         case MEM_EVENT_BUFFER_WRITTEN:
         {
+#ifdef MemTest
+            appData.checkMem = 1;
+#else
             freeI2CRxBuffIndex(appData.memHandler);
             appData.memWriting = false;
             appData.srvAnswer = APP_SERVER_OK;
+#endif
         }
         break;
         case MEM_EVENT_BUFFER_NOT_WRITTEN:
         {
+#ifdef MemTest
+            Nop();
+#else
             freeI2CRxBuffIndex(appData.memHandler);
             appData.memWriting = false;
             appData.srvAnswer = APP_SERVER_ERROR;
+#endif
         }
         break;
         default:

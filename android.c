@@ -140,6 +140,7 @@ void AND_Tasks()
         {
         }
         break;
+        
         case AND_STATE0_OpeningHostLayer:
         {
             andr_obj.hostHandle = USB_HOST_Open(USB_HOST_INDEX_0, DRV_IO_INTENT_EXCLUSIVE);
@@ -289,16 +290,6 @@ void AND_Tasks()
         case AND_STATE0_TransferingData:
         {
 
-        }
-        break;
-
-        case AND_STATE0_WaitingHostDisable:
-        {
-            if(!USB_HOST_OperationIsEnabled(andr_obj.hostHandle))
-            {
-                USB_HOST_Close(andr_obj.hostHandle);
-                AND_ChangeState(AND_STATE0_OpeningHostLayer, AND_STATE1_None);
-            }
         }
         break;
 

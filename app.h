@@ -21,10 +21,18 @@
 #include "bootloader.h"
 #endif
 
+//#define MemTest
+
 typedef enum
 {
     APP_STATE0_Initializing,
     APP_STATE0_Running,
+
+#ifdef MemTest
+    APP_STATE0_MemoryTesting,
+    APP_STATE0_MemoryOk,
+    APP_STATE0_MemoryError,
+#endif
 
     APP_STATE0_Error
 } APP_STATE;
@@ -58,7 +66,7 @@ typedef struct
     uint16_t  readUSBSize;
     uint8_t * readUSB;
     uint8_t i2cTxHandler;
-    
+
     volatile uint8_t AVLDataReady;
     volatile bool andrDataReady;
     volatile bool loggedIntoServer;
@@ -77,10 +85,18 @@ typedef struct
 
     APP_SERVER_ANSWER srvAnswer;
 
-    uint32_t txUSB;
-    uint32_t rxUSB;
-    uint32_t txI2C;
-    uint32_t rxI2C;
+    volatile uint32_t txUSB;
+    volatile uint32_t rxUSB;
+    volatile uint32_t txI2C;
+    volatile uint32_t rxI2C;
+    volatile uint32_t txErrorI2C;
+    volatile uint32_t txErrorUSB;
+
+#ifdef MemTest
+    uint8_t checkMem;
+    uint8_t checkBuffer[50];
+#endif
+
 } APP_DATA;
 
 void APP_Initialize ( void );

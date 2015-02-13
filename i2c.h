@@ -13,7 +13,7 @@
 #include "system_definitions.h"
 
 #define BUFFER_SIZE 270
-#define BUFFER_RX_NUMBER 5
+#define BUFFER_RX_NUMBER 10
 #define BUFFER_TX_NUMBER 10
 #define TX_MAX_TRIES 10
 
@@ -149,6 +149,7 @@ I2C_RETURN I2CFinishedReceiving();
 
 BYTE * allocI2CTXBuffer(uint8_t * out_index, uint16_t *out_maxSize);
 I2C_RETURN I2CStartTX(uint8_t index, uint16_t size, uint8_t txaddress);
+I2C_RETURN I2CAppFreeTX(uint8_t index);
 uint8_t getI2CTxBufferIndex();
 I2C_RETURN freeI2CTXBuffer();
 

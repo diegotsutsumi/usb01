@@ -70,6 +70,7 @@ typedef struct
     bool entry_flag;
     bool page_overflow;
 
+    uint8_t aux;
 } MEM_Object;
 
 void MEM_Init(uint32_t baudRate, uint32_t clockFreq);
