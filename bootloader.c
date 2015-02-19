@@ -81,22 +81,29 @@ void BootSection readExtFlash512Bytes(DWORD_VAL addr)
 {
     UINT8 i,j,buff[4];
     UINT32 wbuff;
-
-    if(!SPI1CONbits.ON)
+    char dummy;
+    
+    if(!SPI2CONbits.ON)
     {
-        SPI1CONbits.ON=1;
+        SPI2CONbits.ON=1;
     }
 
-    PORTBbits.RB13 = 0;
-    SPI1BUF = 0x03;
-    while(!SPI1STATbits.SPIRBF);
+    PORTCbits.RC9 = 0;
+    SPI2BUF = 0x03;
+    while(!SPI2STATbits.SPIRBF);
+    dummy = SPI2BUF;
 
-    SPI1BUF = addr.byte.UB;
-    while(!SPI1STATbits.SPIRBF);
-    SPI1BUF = addr.byte.HB;
-    while(!SPI1STATbits.SPIRBF);
-    SPI1BUF = addr.byte.LB;
-    while(!SPI1STATbits.SPIRBF);
+    SPI2BUF = addr.byte.UB;
+    while(!SPI2STATbits.SPIRBF);
+    dummy = SPI2BUF;
+
+    SPI2BUF = addr.byte.HB;
+    while(!SPI2STATbits.SPIRBF);
+    dummy = SPI2BUF;
+    
+    SPI2BUF = addr.byte.LB;
+    while(!SPI2STATbits.SPIRBF);
+    dummy = SPI2BUF;
 
     for(i=0;i<128;i++)
     {
@@ -104,13 +111,13 @@ void BootSection readExtFlash512Bytes(DWORD_VAL addr)
 
         for(j=0;j<4;j++)
         {
-            SPI1BUF = 0x00;
-            while(!SPI1STATbits.SPIRBF);
-            buff[j] = SPI1BUF;
+            SPI2BUF = 0x00;
+            while(!SPI2STATbits.SPIRBF);
+            buff[j] = SPI2BUF;
             wbuff = wbuff | (UINT32)(buff[j] << (j*8));
         }
 
         newFwRow[i] = wbuff;
     }
-    PORTBbits.RB13 = 1;
+    PORTCbits.RB9 = 1;
 }

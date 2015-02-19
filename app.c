@@ -13,11 +13,39 @@
 APP_DATA appData;
 
 #ifdef MemTest
-uint8_t memTestBuff[50] = {0,1,2,3,4,5,6,7,8,9,
-                           10,11,12,13,14,15,16,17,18,19,
-                           20,21,22,23,24,25,26,27,28,29,
-                           30,31,32,33,34,35,36,37,38,39,
-                           40,41,42,43,44,45,46,47,48,49};
+static uint8_t memTestBuff[300] =
+{
+    0,1,2,3,4,5,6,7,8,9,
+    10,11,12,13,14,15,16,17,18,19,
+    20,21,22,23,24,25,26,27,28,29,
+    30,31,32,33,34,35,36,37,38,39,
+    40,41,42,43,44,45,46,47,48,49,
+    50,51,52,53,54,55,56,57,58,59,
+    60,61,62,63,64,65,66,67,68,69,
+    70.71,72,73,74,75,76,77,78,79,
+    80,81,82,83,84,85,86,87,88,89,
+    90,91,92,93,94,95,96,97,98,99,
+    100,101,102,103,104,105,106,107,108,109,
+    110,111,112,113,114,115,116,117,118,119,
+    120,121,122,123,124,125,126,127,128,129,
+    130,131,132,133,134,135,136,137,138,139,
+    140,141,142,143,144,145,146,147,148,149,
+    150,151,152,153,154,155,156,157,158,159,
+    160,161,162,163,164,165,166,167,168,169,
+    170,171,172,173,174,175,176,177,178,179,
+    180,181,182,183,184,185,186,187,188,189,
+    190,191,192,193,194,195,196,197,198,199,
+    200,201,202,203,204,205,206,207,208,209,
+    210,211,212,213,214,215,216,217,218,219,
+    220,221,222,223,224,225,226,227,228,229,
+    230,231,232,233,234,235,236,237,238,239,
+    240,241,242,243,244,245,246,247,248,249,
+    250,251,252,253,254,255,255,255,2,3,
+    4,5,6,7,8,9,10,11,12,13,
+    14,15,16,17,18,19,20,21,22,23,
+    24,25,26,27,28,29,30,31,32,33,
+    34,35,36,37,38,39,40,41,42,43,
+};
 #endif
 
 
@@ -108,40 +136,50 @@ void APP_Tasks ( void )
         case APP_STATE0_MemoryTesting:
         {
             int i,j;
+            char dummy;
             if(entry_flag)
             {
                 entry_flag=false;
-                MEM_InitObj();
+                MEM_InitObj(true);
                 MEM_SetEventHandler(APP_MEMEventHandler);
-                MEM_FillBuffer(memTestBuff,50);
+                MEM_FillBuffer(memTestBuff,300);
                 appData.checkMem = 0;
             }
             if(appData.checkMem==1)
             {
-                PORTBbits.RB13 = 0;
-                SPI2BUF = 0xC0;
-                while(SPI1STATbits.SPITBF);
-                SPI2BUF = 0;
-                while(SPI1STATbits.SPITBF);
-                SPI2BUF = 0;
-                while(SPI1STATbits.SPITBF);
-                SPI2BUF = 0;
-                while(SPI1STATbits.SPITBF);
+                PORTCbits.RC9 = 0;
+                SPI2BUF = 0x03;
+                while(!SPI2STATbits.SPIRBF);
+                dummy = SPI2BUF;
 
-                for(j=0;j<50;j++)
+                SPI2BUF = 0;
+                while(!SPI2STATbits.SPIRBF);
+                dummy = SPI2BUF;
+
+                SPI2BUF = 0;
+                while(!SPI2STATbits.SPIRBF);
+                dummy = SPI2BUF;
+
+                SPI2BUF = 0;
+                while(!SPI2STATbits.SPIRBF);
+                dummy = SPI2BUF;
+
+                for(j=0;j<600;j++)
                 {
                     SPI2BUF = 0x00;
                     while(!SPI2STATbits.SPIRBF);
                     appData.checkBuffer[j] = SPI2BUF;
                 }
+                
                 appData.checkMem=2;
+                PORTCbits.RC9 = 1;
             }
             else if(appData.checkMem==2)
             {
                 i=0;
-                for(j=0;j<50;j++)
+                for(j=0;j<600;j++)
                 {
-                    if(appData.checkBuffer[j] != memTestBuff[j])
+                    if(appData.checkBuffer[j] != memTestBuff[j%300])
                     {
                         i=1;
                         break;
@@ -327,20 +365,23 @@ void APP_ProcessAVLPacket()
                            (*(appData.i2cRX+8)!=appData.fwSizeCount.byte.LB) ||
                            (appData.fwSizeCount.Val<0x400) ) //Total Size check
                         {
+                            freeI2CRxBuffIndex(appData.genericRxHandler);
                             appData.srvAnswer = APP_SERVER_ERROR;
                             return;
                         }
 
                         if(appData.CRC.Val != appData.PPPChecksumOut.Val)
                         {
+                            freeI2CRxBuffIndex(appData.genericRxHandler);
                             appData.srvAnswer = APP_SERVER_ERROR;
                             return;
                         }
                         
                         appData.fwUpdating = false;
                         appData.srvAnswer = APP_SERVER_OK;
-
                         appData.performFlashBoot = true;
+                        freeI2CRxBuffIndex(appData.genericRxHandler);
+                        return;
                         //TODO: Start booting
                     }
                 }
@@ -351,7 +392,7 @@ void APP_ProcessAVLPacket()
                     {
                         appData.fwUpdating = true;
                         appData.fwCRC = true;
-                        MEM_InitObj();
+                        MEM_InitObj(true);
                         MEM_SetEventHandler(APP_MEMEventHandler);
                         appData.PPPChecksumOut.Val=0;
                         appData.fwSizeCount.Val=0;
@@ -400,6 +441,12 @@ void APP_ProcessAVLPacket()
                     appData.srvAnswer = APP_SERVER_ERROR;
                     return;
                 }
+            }
+            else
+            {
+                freeI2CRxBuffIndex(appData.genericRxHandler);
+                appData.srvAnswer = APP_SERVER_ERROR;
+                return;
             }
         }
     }
@@ -497,14 +544,31 @@ void APP_AndrEventHandler(AND_EVENT event, uint32_t eventData)
     }
 }
 
+#ifdef MemTest
+int x=0;
+#endif
+
 void APP_MEMEventHandler(MEM_EVENT event)
 {
     switch(event)
     {
+        case MEM_EVENT_ERASED:
+        {
+
+        }
+        break;
         case MEM_EVENT_BUFFER_WRITTEN:
         {
 #ifdef MemTest
-            appData.checkMem = 1;
+            if(x==0)
+            {
+                MEM_FillBuffer(memTestBuff,300);
+                x=1;
+            }
+            else
+            {
+                appData.checkMem = 1;
+            }
 #else
             freeI2CRxBuffIndex(appData.memHandler);
             appData.memWriting = false;

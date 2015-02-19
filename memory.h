@@ -11,6 +11,7 @@
 #include "includes.h"
 #include "peripheral/spi/plib_spi.h"
 #include "peripheral/ports/plib_ports.h"
+#include "system_definitions.h"
 #include "bsp_config.h"
 
 #define MEM_BASE_ADDR 0x0
@@ -18,6 +19,7 @@
 
 typedef enum
 {
+    MEM_EVENT_ERASED,
     MEM_EVENT_BUFFER_WRITTEN,
     MEM_EVENT_BUFFER_NOT_WRITTEN,
     MEM_EVENT_NONE
@@ -37,9 +39,10 @@ typedef enum
 typedef enum
 {
     MEM_STATE1_WritingEnable,
+    MEM_STATE1_PageProgramCommand,
 
     //States inside MEM_STATE0_ErasingBlocks
-    MEM_STATE1_ErasingBlock,
+    MEM_STATE1_ErasingChip, //Later implement the block erase separately
     MEM_STATE1_WaitingErase,
 
     //States inside MEM_STATE0_Writing
@@ -61,12 +64,15 @@ typedef struct
     uint8_t * buffer;
     uint16_t buff_size;
     DWORD_VAL current_addr;
-    uint8_t addrCount;
+    int8_t addrCount;
     uint16_t byteCount;
+    uint16_t pageCount;
 
     MEM_EVENT_HANDLER event_handler;
 
     //volatile bool waiting_write;
+    bool buffer_empty;
+    bool page_init;
     bool entry_flag;
     bool page_overflow;
 
@@ -75,7 +81,7 @@ typedef struct
 
 void MEM_Init(uint32_t baudRate, uint32_t clockFreq);
 void changeMEMState(MEM_STATES_LVL0 _lvl0, MEM_STATES_LVL1 _lvl1);
-void MEM_InitObj();
+void MEM_InitObj(bool erase);
 void MEM_DeinitObj();
 bool MEM_FillBuffer(uint8_t * _buffer, uint16_t _buff_size);
 bool MEM_SetEventHandler(MEM_EVENT_HANDLER handler);

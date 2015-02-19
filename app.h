@@ -21,7 +21,7 @@
 #include "bootloader.h"
 #endif
 
-//#define MemTest
+#define MemTest
 
 typedef enum
 {
@@ -94,7 +94,7 @@ typedef struct
 
 #ifdef MemTest
     uint8_t checkMem;
-    uint8_t checkBuffer[50];
+    uint8_t checkBuffer[600];
 #endif
 
 } APP_DATA;
