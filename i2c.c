@@ -154,8 +154,11 @@ void I2C_DeInitSlave()
 
 char I2C_SlaveRead(void)
 {
-     PLIB_I2C_ReceiverOverflowClear(I2C_ID_1);
-     return (PLIB_I2C_ReceivedByteGet(I2C_ID_1));
+    char ret;
+    PLIB_I2C_ReceiverOverflowClear(I2C_ID_1);
+    ret = PLIB_I2C_ReceivedByteGet(I2C_ID_1);
+    PLIB_I2C_SlaveClockRelease(I2C_ID_1);
+    return ret;
 }
 
 void I2C_SetEventHandler(I2C_EVENT_HANDLER handler)
@@ -347,7 +350,6 @@ I2C_RETURN freeI2CTXBuffer() //Called by I2C when finished transmitting the tran
 
 void I2C_Tasks()
 {
-    char dummy;
     switch (i2c_obj.current_state.lvl0)
     {
         case I2C_STATE0_Uninitialized:
@@ -358,15 +360,22 @@ void I2C_Tasks()
         case I2C_STATE0_SettingUpSlave:
         {
             I2C_InitSlave();
+            i2c_obj.entry_flag = true;
             changeI2CState(I2C_STATE0_ListeningLine,I2C_STATE1_WaitingStart);
         }
         break;
         case I2C_STATE0_ListeningLine:
         {
+            uint8_t dummy;
             switch(i2c_obj.current_state.lvl1)
             {
                 case I2C_STATE1_WaitingStart:
                 {
+                    if(i2c_obj.entry_flag)
+                    {
+                        dummy = I2C_SlaveRead();
+                        i2c_obj.entry_flag = false;
+                    }
                     if(I2C1STATbits.S && !I2C1STATbits.P) //Start condition
                     {
                         changeI2CState(I2C_STATE0_ListeningLine,I2C_STATE1_WaitingAddress);
@@ -395,6 +404,8 @@ void I2C_Tasks()
                 {
                     if(!I2C1STATbits.S && I2C1STATbits.P) //Stop condition
                     {
+                        i2c_obj.entry_flag = true;
+                        dummy = I2C_SlaveRead();
                         changeI2CState(I2C_STATE0_ListeningLine,I2C_STATE1_WaitingStart);
                     }
                     else
@@ -404,7 +415,6 @@ void I2C_Tasks()
                             if(PLIB_I2C_ReceivedByteIsAvailable(I2C_ID_1))
                             {
                                 dummy = I2C_SlaveRead();
-                                PLIB_I2C_SlaveClockRelease(I2C_ID_1);
                                 i2c_obj.slave_address_interrupt = false;
                                 i2c_obj.addrIndex++;
                                 if(i2c_obj.addrIndex>=2 || dummy==0)
@@ -428,6 +438,8 @@ void I2C_Tasks()
                             I2CFinishedReceiving();
                             i2c_obj.rx_alloc_idx=254;
                         }
+                        i2c_obj.entry_flag = true;
+                        dummy = I2C_SlaveRead();
                         changeI2CState(I2C_STATE0_ListeningLine,I2C_STATE1_WaitingStart);
                     }
                     else
@@ -451,16 +463,10 @@ void I2C_Tasks()
                                     {
                                         i2c_obj.I2CRxBuff[i2c_obj.rx_alloc_idx][i2c_obj.I2CRxBuffSize[i2c_obj.rx_alloc_idx]] = I2C_SlaveRead();
                                         i2c_obj.I2CRxBuffSize[i2c_obj.rx_alloc_idx]++;
-                                        PLIB_I2C_SlaveClockRelease(I2C_ID_1);
                                     }
                                     else
                                     {
-                                        if(i2c_obj.rx_alloc_idx<BUFFER_RX_NUMBER && i2c_obj.rx_alloc_idx>=0)
-                                        {
-                                            I2CFinishedReceiving();
-                                            i2c_obj.rx_alloc_idx=99;
-                                        }
-                                        changeI2CState(I2C_STATE0_ListeningLine,I2C_STATE1_WaitingStart);
+                                        dummy = I2C_SlaveRead();
                                     }
                                 }
                             }
@@ -568,9 +574,10 @@ void I2C_Tasks()
                     }
                 }
                 break;
+                
                 default:
                 {
-                    //Software may interrupt and fall here, it is not an error.
+                    //Hardware may interrupt and fall here, it is not an error.
                     //changeI2CState(I2C_STATE0_Error,I2C_STATE1_None);
                 }
                 break;
