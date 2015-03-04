@@ -468,8 +468,12 @@ USB_HOST_EVENT_RESPONSE USB_HostEventHandler (USB_HOST_EVENTS event, void * even
             //TODO restart usb config
             break;
         case USB_HOST_EVENT_DEVICE_SUSPENDED:
+            andr_obj.event_handler(AND_EVENT_DISCONNECTED, NULL);
+            PLIB_PORTS_PinClear( PORTS_ID_0, PORT_CHANNEL_C, BSP_LED1);
             break;
         case USB_HOST_EVENT_DEVICE_RESUMED:
+            andr_obj.event_handler(AND_EVENT_CONNECTED, NULL);
+            PLIB_PORTS_PinSet( PORTS_ID_0, PORT_CHANNEL_C, BSP_LED1);
             break;
     }
     return USB_HOST_EVENT_RESPONSE_NONE;
