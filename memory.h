@@ -38,7 +38,7 @@ typedef enum
 
 typedef enum
 {
-    MEM_STATE1_WritingEnable,
+    MEM_STATE1_EnablingWrite,
     MEM_STATE1_PageProgramCommand,
 
     //States inside MEM_STATE0_ErasingBlocks
@@ -81,8 +81,8 @@ typedef struct
 
 void MEM_Init(uint32_t baudRate, uint32_t clockFreq);
 void changeMEMState(MEM_STATES_LVL0 _lvl0, MEM_STATES_LVL1 _lvl1);
-void MEM_InitObj(bool erase);
-void MEM_DeinitObj();
+bool MEM_InitObj(bool erase);
+bool MEM_DeinitObj();
 bool MEM_FillBuffer(uint8_t * _buffer, uint16_t _buff_size);
 bool MEM_SetEventHandler(MEM_EVENT_HANDLER handler);
 void MEM_Tasks();

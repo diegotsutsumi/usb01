@@ -21,7 +21,7 @@
 #include "bootloader.h"
 #endif
 
-#define MemTest
+//#define MemTest
 
 typedef enum
 {

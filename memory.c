@@ -31,8 +31,13 @@ void changeMEMState(MEM_STATES_LVL0 _lvl0, MEM_STATES_LVL1 _lvl1)
     mem_obj.current_state.lvl1 = _lvl1;
 }
 
-void MEM_InitObj(bool erase)
+bool MEM_InitObj(bool erase)
 {
+    if(mem_obj.current_state.lvl0!=MEM_STATE0_Uninitialized)
+    {
+        return false;
+    }
+    
     PLIB_SPI_Enable(SPI_ID_2);
     mem_obj.buff_size=0;
     mem_obj.buffer=0;
@@ -49,16 +54,22 @@ void MEM_InitObj(bool erase)
     mem_obj.event_handler=0;
     if(erase)
     {
-        changeMEMState(MEM_STATE0_Erasing,MEM_STATE1_WritingEnable);
+        changeMEMState(MEM_STATE0_Erasing,MEM_STATE1_EnablingWrite);
     }
     else
     {
         changeMEMState(MEM_STATE0_WaitingBufferFill,MEM_STATE1_None);
     }
+    return true;
 }
 
-void MEM_DeinitObj()
+bool MEM_DeinitObj()
 {
+    if(mem_obj.current_state.lvl0!=MEM_STATE0_WaitingBufferFill &&
+       mem_obj.current_state.lvl0!=MEM_STATE0_Error)
+    {
+        return false;
+    }
     PLIB_SPI_Disable(SPI_ID_2);
     mem_obj.buff_size=0;
     mem_obj.buffer=0;
@@ -74,6 +85,7 @@ void MEM_DeinitObj()
     mem_obj.buffer_empty=true;
     mem_obj.event_handler=0;
     changeMEMState(MEM_STATE0_Uninitialized,MEM_STATE1_None);
+    return true;
 }
 
 bool MEM_FillBuffer(uint8_t * _buffer, uint16_t _buff_size)
@@ -113,7 +125,7 @@ void MEM_Tasks()
         {
             switch(mem_obj.current_state.lvl1)
             {
-                case MEM_STATE1_WritingEnable:
+                case MEM_STATE1_EnablingWrite:
                 {
                     if(mem_obj.entry_flag)
                     {
@@ -214,8 +226,8 @@ void MEM_Tasks()
                 mem_obj.entry_flag=true;
                 mem_obj.page_init=true;
                 mem_obj.byteCount=0;
-                mem_obj.pageCount=0;
-                changeMEMState(MEM_STATE0_Writing,MEM_STATE1_WritingEnable);
+                //mem_obj.pageCount=0;
+                changeMEMState(MEM_STATE0_Writing,MEM_STATE1_EnablingWrite);
             }
         }
         break;
@@ -224,7 +236,7 @@ void MEM_Tasks()
         {
             switch(mem_obj.current_state.lvl1)
             {
-                case MEM_STATE1_WritingEnable:
+                case MEM_STATE1_EnablingWrite:
                 {
                     if(mem_obj.entry_flag)
                     {
@@ -350,7 +362,7 @@ void MEM_Tasks()
                                     {
                                         mem_obj.pageCount++;
                                         mem_obj.page_init = true;
-                                        changeMEMState(MEM_STATE0_Writing,MEM_STATE1_WritingEnable);
+                                        changeMEMState(MEM_STATE0_Writing,MEM_STATE1_EnablingWrite);
                                     }
                                     else
                                     {
