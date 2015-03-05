@@ -293,6 +293,12 @@ void AND_Tasks()
         }
         break;
 
+        case AND_STATE0_Charging:
+        {
+
+        }
+        break;
+
         case AND_STATE0_Error:
         {
             if(andr_obj.entry_flag)
@@ -312,7 +318,6 @@ void AND_Tasks()
     }
 }
 
-
 void AND_AndroidEventHandler(USB_HOST_ANDROID_EVENT event, uint32_t eventData, uintptr_t context)
 {
     switch(event)
@@ -324,6 +329,10 @@ void AND_AndroidEventHandler(USB_HOST_ANDROID_EVENT event, uint32_t eventData, u
                 andr_obj.sysTmrHandle = SYS_TMR_DelayMS(100); //Waiting for USB to be ready to read and write.
                 AND_ChangeState(AND_STATE0_WaitingUsbReady, AND_STATE1_None);
                 PLIB_PORTS_PinSet( PORTS_ID_0, PORT_CHANNEL_C, BSP_LED1);
+            }
+            else if(eventData==255)
+            {
+                AND_ChangeState(AND_STATE0_Charging,AND_STATE1_None);
             }
             else
             {
@@ -345,14 +354,14 @@ void AND_AndroidEventHandler(USB_HOST_ANDROID_EVENT event, uint32_t eventData, u
 
         case USB_HOST_ANDROID_EVENT_PROTOCOL_COMPLETE:
         {
-            if(andr_obj.protocol != 0)
+            if(andr_obj.protocol != 0 && andr_obj.protocol <= 10)
             {
                 andr_obj.entry_flag = true;
                 AND_ChangeState(AND_STATE0_SendingAndroidInfo, AND_STATE1_SendingManufacturer);
             }
             else
             {
-                AND_ChangeState(AND_STATE0_Error,AND_STATE1_None);
+                AND_ChangeState(AND_STATE0_Charging,AND_STATE1_None);
             }
         }
         break;
@@ -457,14 +466,17 @@ USB_HOST_EVENT_RESPONSE USB_HostEventHandler (USB_HOST_EVENTS event, void * even
         case USB_HOST_EVENT_VBUS_REQUEST_POWER:
             break;
         case USB_HOST_EVENT_UNSUPPORTED_DEVICE:
+            Nop();
             //TODO restart usb config
             break;
         case USB_HOST_EVENT_CANNOT_ENUMERATE:
+            Nop();
             //TODO restart usb config
             break;
         case USB_HOST_EVENT_CONFIGURATION_COMPLETE:
             break;
         case USB_HOST_EVENT_CONFIGURATION_FAILED:
+            Nop();
             //TODO restart usb config
             break;
         case USB_HOST_EVENT_DEVICE_SUSPENDED:

@@ -35,6 +35,7 @@ typedef enum
     AND_STATE0_WaitingUsbReady,
     AND_STATE0_WaitingMacroConnect,
     AND_STATE0_TransferingData,
+    AND_STATE0_Charging,
     AND_STATE0_Error
 }AND_STATES_LVL0;
 

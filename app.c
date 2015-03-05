@@ -219,7 +219,7 @@ void APP_Tasks ( void )
                 {
                     TunelLoginPacket(serialNumber,fwVersion,appData.loginPacket,&(appData.loginPacketSize));
                     I2CStartTX(appData.loginBuffHandler, appData.loginPacketSize,AVL_ADDR);
-                    appData.sysTmrHandle = SYS_TMR_DelayMS(5000);
+                    appData.sysTmrHandle = SYS_TMR_DelayMS(10000);
                 }
             }
             if(appData.performFlashBoot && appData.srvAnswer==APP_SERVER_NOANSWER)
@@ -259,7 +259,7 @@ void APP_Tasks ( void )
                     {
                         TunelLoginPacket(serialNumber,fwVersion,appData.loginPacket,&(appData.loginPacketSize));
                         I2CStartTX(appData.loginBuffHandler, appData.loginPacketSize,AVL_ADDR);
-                        appData.sysTmrHandle = SYS_TMR_DelayMS(5000);
+                        appData.sysTmrHandle = SYS_TMR_DelayMS(10000);
                     }
                 }
             }
@@ -343,9 +343,9 @@ void APP_ProcessAVLPacket()
                 {
                     appData.loggedIntoServer=true;
                 }
-                freeI2CRxBuffIndex(appData.genericRxHandler);
-                return;
             }
+            freeI2CRxBuffIndex(appData.genericRxHandler);
+            return;
         }
         else
         {
@@ -452,9 +452,9 @@ void APP_ProcessAVLPacket()
     }
     else
     {
+        appData.androidHandler = appData.genericRxHandler;
         if(appData.andrConnected)
         {
-            appData.androidHandler = appData.genericRxHandler;
             if(!AND_Write(appData.i2cRX,appData.i2cRxSize))
             {
                 freeI2CRxBuffIndex(appData.androidHandler); //Dropping packet in error case
@@ -476,6 +476,7 @@ void APP_I2CEventHandler(I2C_EVENT event/*, void * eventData*/)
         case I2C_EVENT_DATA_READY:
         {
             appData.rxI2C++;
+
             appData.AVLDataReady++;
         }
         break;
