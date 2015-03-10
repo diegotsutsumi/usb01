@@ -245,7 +245,13 @@ void AND_Tasks()
 
                 case AND_STATE1_None:
                 {
-                    AND_ChangeState(AND_STATE0_Error,AND_STATE1_None);
+                    //AND_ChangeState(AND_STATE0_Error,AND_STATE1_None);
+                }
+                break;
+
+                default:
+                {
+
                 }
                 break;
             }
@@ -311,8 +317,8 @@ void AND_Tasks()
         
         default:
         {
-            AND_ChangeState(AND_STATE0_Error,AND_STATE1_None);
-            andr_obj.entry_flag = true;
+            //AND_ChangeState(AND_STATE0_Error,AND_STATE1_None);
+            //andr_obj.entry_flag = true;
         }
         break;
     }
@@ -406,7 +412,7 @@ void AND_AndroidEventHandler(USB_HOST_ANDROID_EVENT event, uint32_t eventData, u
 
                     default:
                     {
-                        AND_ChangeState(AND_STATE0_Error,AND_STATE1_None);
+                        //AND_ChangeState(AND_STATE0_Error,AND_STATE1_None);
                     }
                     break;
                 }
@@ -467,11 +473,21 @@ USB_HOST_EVENT_RESPONSE USB_HostEventHandler (USB_HOST_EVENTS event, void * even
             break;
         case USB_HOST_EVENT_UNSUPPORTED_DEVICE:
             Nop();
-            //TODO restart usb config
+
             break;
         case USB_HOST_EVENT_CANNOT_ENUMERATE:
             Nop();
-            //TODO restart usb config
+            //Resetting when it ends up in the error state
+            SYSKEY = 0x00000000;
+            SYSKEY = 0xAA996655;
+            SYSKEY = 0x556699AA;
+
+            RSWRSTSET = 1;
+
+            unsigned int dummy;
+            dummy = RSWRST;
+            while(1);
+            
             break;
         case USB_HOST_EVENT_CONFIGURATION_COMPLETE:
             break;
@@ -480,12 +496,14 @@ USB_HOST_EVENT_RESPONSE USB_HostEventHandler (USB_HOST_EVENTS event, void * even
             //TODO restart usb config
             break;
         case USB_HOST_EVENT_DEVICE_SUSPENDED:
-            andr_obj.event_handler(AND_EVENT_DISCONNECTED, NULL);
-            PLIB_PORTS_PinClear( PORTS_ID_0, PORT_CHANNEL_C, BSP_LED1);
+            Nop();
+            //andr_obj.event_handler(AND_EVENT_DISCONNECTED, NULL);
+            //PLIB_PORTS_PinClear( PORTS_ID_0, PORT_CHANNEL_C, BSP_LED1);
             break;
         case USB_HOST_EVENT_DEVICE_RESUMED:
-            andr_obj.event_handler(AND_EVENT_CONNECTED, NULL);
-            PLIB_PORTS_PinSet( PORTS_ID_0, PORT_CHANNEL_C, BSP_LED1);
+            Nop();
+            //andr_obj.event_handler(AND_EVENT_CONNECTED, NULL);
+            //PLIB_PORTS_PinSet( PORTS_ID_0, PORT_CHANNEL_C, BSP_LED1);
             break;
     }
     return USB_HOST_EVENT_RESPONSE_NONE;

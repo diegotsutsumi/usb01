@@ -1,0 +1,169 @@
+ifblock USB_HOST_INSTANCE_0
+
+config DRV_USB_HOST_MODULE_ID_IDX0
+    string "USB module ID"
+    depends on DRV_USB_HOST_SUPPORT
+	default "USB_ID_1" if PIC32MX
+	default "USBHS_ID_0" if PIC32MZ
+    ---help---
+    Specify the USB Peripheral to be used with this instance of the USB Host Stack.
+    ---endhelp---
+
+config DRV_USB_HOST_INTERRUPT_SOURCE_IDX0
+    string "Interrupt source"
+    depends on DRV_USB_HOST_SUPPORT && DRV_USB_INTERRUPT_MODE
+    range INT_SOURCE
+    default "INT_SOURCE_USB_1"
+    ---help---
+    Specify the USB Interrupt Source for this USB peripheral.
+    ---endhelp---
+
+config DRV_USB_HOST_INTERRUPT_VECTOR_IDX0
+    string "Interrupt vector"
+    depends on DRV_USB_HOST_SUPPORT && DRV_USB_INTERRUPT_MODE
+	range INT_VECTOR
+	default "INT_VECTOR_USB1"
+    ---help---
+    Specify the Interrupt Vector for this USB peripheral.
+    ---endhelp---
+
+config DRV_USB_HOST_INTERRUPT_PRIORITY_IDX0
+    string "Interrupt priority"
+    depends on DRV_USB_HOST_SUPPORT && DRV_USB_INTERRUPT_MODE
+    range INT_PRIORITY_LEVEL
+    default "INT_PRIORITY_LEVEL4"
+    ---help---
+    Specify the Interrupt Vector Priority for this interrupt vector
+    ---endhelp---
+
+config DRV_USB_HOST_INTERRUPT_SUB_PRIORITY_IDX0
+    string "Interrupt sub priority"
+    depends on DRV_USB_HOST_SUPPORT && DRV_USB_INTERRUPT_MODE
+    range INT_SUBPRIORITY_LEVEL
+    default "INT_SUBPRIORITY_LEVEL0"
+    ---help---
+    Specify the Interrupt Vector Subpriority for this interrupt vector
+    ---endhelp---
+
+config DRV_USB_HOST_INT_PRIO_NUM_IDX0
+    string
+    depends on DRV_USB_HOST_SUPPORT && DRV_USB_INTERRUPT_MODE
+    default "0" if DRV_USB_HOST_INTERRUPT_PRIORITY_IDX0 = "INT_PRIORITY_LEVEL0"
+    default "1" if DRV_USB_HOST_INTERRUPT_PRIORITY_IDX0 = "INT_PRIORITY_LEVEL1"
+    default "2" if DRV_USB_HOST_INTERRUPT_PRIORITY_IDX0 = "INT_PRIORITY_LEVEL2"
+    default "3" if DRV_USB_HOST_INTERRUPT_PRIORITY_IDX0 = "INT_PRIORITY_LEVEL3"
+    default "4" if DRV_USB_HOST_INTERRUPT_PRIORITY_IDX0 = "INT_PRIORITY_LEVEL4"
+    default "5" if DRV_USB_HOST_INTERRUPT_PRIORITY_IDX0 = "INT_PRIORITY_LEVEL5"
+    default "6" if DRV_USB_HOST_INTERRUPT_PRIORITY_IDX0 = "INT_PRIORITY_LEVEL6"
+    default "7" if DRV_USB_HOST_INTERRUPT_PRIORITY_IDX0 = "INT_PRIORITY_LEVEL7"
+
+config DRV_USB_HOST_ISR_VECTOR_IDX0
+    string
+    depends on DRV_USB_HOST_SUPPORT && DRV_USB_INTERRUPT_MODE
+    default "_USB_1_VECTOR" if PIC32MX
+    default "_USB_VECTOR"   if PIC32MZ
+	
+config USB_HOST_SLEEP_IN_IDLE_IDX0
+    bool "Stop in Idle"
+    depends on DRV_USB_HOST_SUPPORT
+    default n
+    ---help---
+    Select this to stop the USB module when the CPU enters IDLE mode.
+    ---endhelp---
+
+config DRV_USB_HOST_SUSPEND_IN_SLEEP_IDX0
+    bool "USB suspend in sleep"
+    depends on DRV_USB_HOST_SUPPORT
+    default n
+    ---help---
+    Select this to suspend the USB module when the PIC32 enter sleep mode.
+    ---endhelp---  	
+
+config USB_HOST_HOST_POWER_STATE_IDX0
+    depends on DRV_USB_HOST_SUPPORT
+    string "Power State"
+    range SYS_MODULE_POWER_STATE
+    default "SYS_MODULE_POWER_RUN_FULL"
+    ---help---
+    Select the system power state for the USB Host Layer.
+    ---endhelp---
+	
+config USB_HOST_TPL_ENTRIES
+    int "Host TPL entries "
+    depends on DRV_USB_HOST_SUPPORT
+    default 1
+    ---help---
+    Enter the number of entries in the TPL table for this USB Host Stack
+    instance. This number is greater than 1 if more than 1 device type is to be
+    supported.
+    ---endhelp---
+	
+config USB_HOST_MAX_DEVICES_NUMBER
+    int "Host Max devices  "
+    depends on DRV_USB_HOST_SUPPORT
+    default 1	
+    ---help---
+    Enter the maximum number of devices that should be managed by this instance
+    of the USB Host stack. Note that support for multiple device requires Hub
+    support. The Hub should also be counted as an attached device.
+    ---endhelp---
+	
+config USB_HOST_MAX_CONFIGURATION
+    int "Host Max Configuration per Device  "
+    depends on DRV_USB_HOST_SUPPORT
+    default 1
+    ---help---
+    Enter the maximum number of configurations to be supported per device
+    ---endhelp---
+	
+config USB_HOST_MAX_INTERFACES
+    int "Host Max Interface per Device "
+    depends on DRV_USB_HOST_SUPPORT
+    default 1
+    ---help---
+    Enter the maximum number of interfaces to be supported per device
+    ---endhelp---
+
+config USB_HOST_MAX_DRIVER_SUPPORTED
+    int "Host Max drivers  "
+    depends on DRV_USB_HOST_SUPPORT
+    default 1
+    ---help---
+    Specify the maximum number of class drivers in the application
+    ---endhelp---
+	
+config USB_HOST_CLIENTS_NUMBER
+    int "Number of Host clients"
+    depends on DRV_USB_HOST_SUPPORT
+    default 1 
+    ---help---
+    Specify the total number of USB Host stack clients in the application.
+    ---endhelp---
+	
+config USB_HOST_SPEED_IDX0
+    string "Host Speed"
+    depends on DRV_USB_HOST_SUPPORT
+    range USB_HOST_SPEED
+    default "USB_SPEED_FULL" if PIC32MX
+    default "USB_SPEED_HIGH" if PIC32MZ
+    ---help---
+    Specify the operation speed of the USB Host stack. If the High Speed is
+    specified, the Host stack will support High Speed, Full Speed and
+    Low Speed Devices. If Full Speed is specified, the Host will support Full Speed
+    and Low Speed devices.
+    ---endhelp---
+		
+config USB_HOST_TPL_TABLE_IDX0
+    string "Pointer to TPL list"
+    depends on DRV_USB_HOST_SUPPORT
+    default "USBTPList"
+    ---help---
+    Specify the pointer to the TPL table.
+    ---endhelp---
+	
+enum USB_HOST_DRIVER
+     "USB_HOST_MSD"
+     ||"USB_HOST_CDC"
+    
+
+endif

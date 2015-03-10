@@ -1,0 +1,134 @@
+ifblock USB_DEVICE_INSTANCE_0
+
+    config DRV_USB_PERIPHERAL_ID_IDX0
+        string "USB Module ID"
+        depends on DRV_USB_DEVICE_SUPPORT
+        range USB_MODULE_ID
+        default "USB_ID_1"
+        ---help---
+        Choose the USB peripheral to be used with this instance of the USB
+        Device Stack
+        ---endhelp---
+
+    config DRV_USB_INTERRUPT_SOURCE_IDX0
+        string "Interrupt Source"
+        depends on DRV_USB_DEVICE_SUPPORT && DRV_USB_INTERRUPT_MODE
+        range INT_SOURCE
+        default "INT_SOURCE_USB_1"
+        ---help---
+        Interrupt source for this USB Peripheral
+        ---endhelp---
+
+    config DRV_USB_INTERRUPT_VECTOR_IDX0
+        string "Interrupt Vector"
+        depends on DRV_USB_DEVICE_SUPPORT && DRV_USB_INTERRUPT_MODE
+        range INT_VECTOR
+        default "INT_VECTOR_USB1"
+        ---help---
+        Interrupt vector for this USB Peripheral
+        ---endhelp---
+
+
+    config DRV_USB_INTERRUPT_PRIORITY_IDX0
+        string "Interrupt Priority"
+        depends on DRV_USB_DEVICE_SUPPORT && DRV_USB_INTERRUPT_MODE
+        range INT_PRIORITY_LEVEL
+        default "INT_PRIORITY_LEVEL1"
+        ---help---
+        Select the USB Vector priority
+        ---endhelp---
+
+    config DRV_USB_INTERRUPT_SUB_PRIORITY_IDX0
+        string "Interrupt Sub-priority"
+        depends on DRV_USB_DEVICE_SUPPORT && DRV_USB_INTERRUPT_MODE
+        range INT_SUBPRIORITY_LEVEL
+        default "INT_SUBPRIORITY_LEVEL0"
+        ---help---
+        Select the USB Vector Subpriority
+        ---endhelp---
+
+    config DRV_USB_INT_PRIO_NUM_IDX0
+        string
+        depends on DRV_USB_DEVICE_SUPPORT && DRV_USB_INTERRUPT_MODE
+        default "0" if DRV_USB_INTERRUPT_PRIORITY_IDX0 = "INT_PRIORITY_LEVEL0"
+        default "1" if DRV_USB_INTERRUPT_PRIORITY_IDX0 = "INT_PRIORITY_LEVEL1"
+        default "2" if DRV_USB_INTERRUPT_PRIORITY_IDX0 = "INT_PRIORITY_LEVEL2"
+        default "3" if DRV_USB_INTERRUPT_PRIORITY_IDX0 = "INT_PRIORITY_LEVEL3"
+        default "4" if DRV_USB_INTERRUPT_PRIORITY_IDX0 = "INT_PRIORITY_LEVEL4"
+        default "5" if DRV_USB_INTERRUPT_PRIORITY_IDX0 = "INT_PRIORITY_LEVEL5"
+        default "6" if DRV_USB_INTERRUPT_PRIORITY_IDX0 = "INT_PRIORITY_LEVEL6"
+        default "7" if DRV_USB_INTERRUPT_PRIORITY_IDX0 = "INT_PRIORITY_LEVEL7"
+
+    config DRV_USB_ISR_VECTOR_IDX0
+    string
+    depends on DRV_USB_DEVICE_SUPPORT && DRV_USB_INTERRUPT_MODE
+    default "_USB_1_VECTOR" if DRV_USB_INTERRUPT_VECTOR_IDX0 = "INT_VECTOR_USB1"
+
+    config USB_DEVICE_POWER_STATE_IDX0
+        depends on DRV_USB_DEVICE_SUPPORT
+        string "Power State"
+        range SYS_MODULE_POWER_STATE
+        default "SYS_MODULE_POWER_RUN_FULL"
+        ---help---
+        Select the module power state.
+        ---endhelp---
+
+    config USB_DEVICE_SLEEP_IN_IDLE_IDX0
+        bool "Stop in Idle"
+        depends on DRV_USB_DEVICE_SUPPORT
+        default n
+        ---help---
+        Select this to stop the USB peripheral when the CPU enters IDLE mode.
+        ---endhelp---
+
+    config USB_DEVICE_SUSPEND_IN_SLEEP_IDX0
+        bool "Suspend in Sleep"
+        depends on DRV_USB_DEVICE_SUPPORT
+        default n
+        ---help---
+        Select this to automatically suspend the USB peripheral when the PIC32
+        device enter Sleep mode.
+        ---endhelp---
+
+    config USB_DEVICE_FUNCTION_REGISTRATION_TABLE_IDX0
+        string "Pointer to Function Registration Table"
+        depends on DRV_USB_DEVICE_SUPPORT
+        default "funcRegistrationTable"
+        ---help---
+        Enter the name of the Function Driver Registration Table
+        ---endhelp---
+
+    config USB_DEVICE_MASTER_DESCRIPTOR_IDX0
+        string "Pointer to Master Descriptor"
+        depends on DRV_USB_DEVICE_SUPPORT
+        default "&usbMasterDescriptor"
+        ---help---
+        Provide the pointer to the USB Device Layer Master Descriptor Table.
+        ---endhelp---
+
+    config USB_DEVICE_SPEED_IDX0
+        string "Device Speed"
+        depends on DRV_USB_DEVICE_SUPPORT
+        range USB_DEVICE_SPEED
+        default "USB_SPEED_FULL" if PIC32MX
+        default "USB_SPEED_HIGH" if PIC32MZ
+        ---help---
+        Specify the speed at which this device will attempt to connect to the
+        host. PIC32MX devices support Full Speed only. PIC32MZ devices support Full
+        Speed and High Speed. Selecting High Speed will allow the device to work at both
+        Full Speed and High Speed.
+        ---endhelp---
+
+    config USB_DEVICE_NUMBER_REGISTRED_FUNCTION_DRIVER_IDX0
+        int "Number of Registred Function Drivers"
+        depends on DRV_USB_DEVICE_SUPPORT
+        range 0 3
+        default 1
+        ---help---
+        Specify the number of function driver registered with this instance of
+        the USB Device Layer. This number will be 1 for simple USB device
+        implementations. It will be greater than 1 for composite USB devices. Example:
+        The number of function drivers for a dual CDC COM port device is 2.
+        ---endhelp---
+endif
+

@@ -219,7 +219,7 @@ void APP_Tasks ( void )
                 {
                     TunelLoginPacket(serialNumber,fwVersion,appData.loginPacket,&(appData.loginPacketSize));
                     I2CStartTX(appData.loginBuffHandler, appData.loginPacketSize,AVL_ADDR);
-                    appData.sysTmrHandle = SYS_TMR_DelayMS(10000);
+                    appData.sysTmrHandle = SYS_TMR_DelayMS(5000);
                 }
             }
             if(appData.performFlashBoot && appData.srvAnswer==APP_SERVER_NOANSWER)
@@ -259,7 +259,7 @@ void APP_Tasks ( void )
                     {
                         TunelLoginPacket(serialNumber,fwVersion,appData.loginPacket,&(appData.loginPacketSize));
                         I2CStartTX(appData.loginBuffHandler, appData.loginPacketSize,AVL_ADDR);
-                        appData.sysTmrHandle = SYS_TMR_DelayMS(10000);
+                        appData.sysTmrHandle = SYS_TMR_DelayMS(5000);
                     }
                 }
             }
